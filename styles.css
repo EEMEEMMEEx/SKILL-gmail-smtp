@@ -73,7 +73,20 @@ body {
   min-height: 100vh;
 }
 
-/* Background Atmosphere Grid */
+/* Background Atmosphere Grid & WebGL Shader Backdrop */
+.acid-squares-hero-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 680px;
+  z-index: 0;
+  pointer-events: auto;
+  opacity: 0.5;
+  mask-image: radial-gradient(ellipse at 50% 35%, black 30%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 35%, black 30%, transparent 80%);
+}
+
 .bg-glow-top {
   position: absolute;
   top: 0;

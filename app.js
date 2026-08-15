@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initDeliverabilityCalculator();
   initCodeGenerator();
   initClipboardButtons();
+  initAcidSquares();
 });
 
 /* ==========================================================================
@@ -342,4 +343,204 @@ function initClipboardButtons() {
       }
     });
   });
+}
+
+/* ==========================================================================
+   AcidSquares WebGL 2 Shader (React Bits Component Integration)
+   ========================================================================== */
+async function initAcidSquares() {
+  const container = document.getElementById('acid-squares-hero-bg');
+  if (!container) return;
+
+  try {
+    const { Renderer, Program, Mesh, Triangle } = await import('https://cdn.jsdelivr.net/npm/ogl@1.0.11/dist/ogl.mjs');
+
+    const renderer = new Renderer({
+      webgl: 2,
+      alpha: true,
+      premultipliedAlpha: true,
+      antialias: false,
+      dpr: Math.min(window.devicePixelRatio || 1, 2)
+    });
+
+    const gl = renderer.gl;
+    gl.clearColor(0, 0, 0, 0);
+    const canvas = gl.canvas;
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.display = 'block';
+    container.appendChild(canvas);
+
+    const vertex = `#version 300 es
+    in vec2 position;
+    void main() {
+      gl_Position = vec4(position, 0.0, 1.0);
+    }`;
+
+    const fragment = `#version 300 es
+    precision highp float;
+    uniform vec2 iResolution;
+    uniform float iTime;
+    uniform float uSpeed;
+    uniform float uWaveDepth;
+    uniform float uZoom;
+    uniform float uDensity;
+    uniform float uSpread;
+    uniform float uStepSize;
+    uniform float uGlow;
+    uniform float uExposure;
+    uniform float uColorShift;
+    uniform float uContrast;
+    uniform float uBrightness;
+    uniform float uOpacity;
+    uniform float uSteps;
+    uniform vec3 uColor1;
+    uniform vec3 uColor2;
+    uniform vec3 uColor3;
+    uniform vec2 uMouse;
+    uniform float uMouseStrength;
+    uniform float uMouseRadius;
+    uniform float uEnableMouse;
+    uniform float uMouseActive;
+    uniform float uGrain;
+    uniform float uGrainIntensity;
+    out vec4 fragColor;
+
+    void main() {
+      vec2 frag = gl_FragCoord.xy;
+      float zoom = max(uZoom, 0.05);
+      float aspect = iResolution.x / iResolution.y;
+      vec2 ndc = (2.0 * frag - iResolution.xy) / iResolution.y;
+      vec2 dir = ndc * (0.5 / zoom);
+
+      vec2 mouseNdc = vec2(uMouse.x * aspect, uMouse.y);
+      float mr = max(uMouseRadius, 0.01);
+      vec2 md = ndc - mouseNdc;
+      float dent = exp(-dot(md, md) / (mr * mr)) * (3.0 * uMouseStrength * uEnableMouse * uMouseActive);
+
+      float travel = sin(iTime * uSpeed) * uWaveDepth;
+      float density = max(uDensity, 1.0);
+      float spread = clamp(uSpread, 0.05, 0.6);
+      float stepSize = max(uStepSize, 0.0005);
+      float glowGain = max(uGlow, 0.0);
+
+      vec3 tOffset = vec3(0.0, dent, travel);
+      vec3 p = vec3(0.0);
+      float s = 0.0;
+      float glow = 0.0;
+
+      for (int i = 0; i < 48; i++) {
+        if (float(i) >= uSteps) break;
+        p += vec3(dir * s, s);
+        vec3 q = p + tOffset;
+        s += density - length(q.xz) + length(ceil(q).xy);
+        s = stepSize + abs(s) * spread;
+        glow += glowGain / s;
+      }
+
+      float e = glow / max(uExposure, 1.0);
+      float shimmer = 0.5 + 0.5 * dot(cos(iTime * uColorShift + p), vec3(0.3333));
+      float v = tanh(e * uBrightness * mix(0.7, 1.05, shimmer));
+      v = clamp((v - 0.5) * uContrast + 0.5, 0.0, 1.0);
+
+      vec3 col = mix(uColor1, uColor2, smoothstep(0.0, 0.55, v));
+      col = mix(col, uColor3, smoothstep(0.55, 1.0, v));
+      col *= v;
+
+      float a = clamp(v, 0.0, 1.0) * uOpacity;
+      vec3 outRgb = col * a;
+      if (uGrain > 0.5) {
+        float gv = (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233)) + iTime) * 43758.5453) - 0.5) * uGrainIntensity;
+        outRgb = clamp(outRgb + gv, 0.0, 1.0);
+        a = clamp(a + gv, 0.0, 1.0);
+      }
+      fragColor = vec4(outRgb, a);
+    }`;
+
+    const geometry = new Triangle(gl);
+    const program = new Program(gl, {
+      vertex,
+      fragment,
+      uniforms: {
+        iTime: { value: 0 },
+        iResolution: { value: new Float32Array([1, 1]) },
+        uSpeed: { value: 0.6 },
+        uWaveDepth: { value: 1.0 },
+        uZoom: { value: 1.2 },
+        uDensity: { value: 10.0 },
+        uSpread: { value: 0.3 },
+        uStepSize: { value: 0.002 },
+        uGlow: { value: 1.0 },
+        uExposure: { value: 2700 },
+        uColorShift: { value: 0 },
+        uContrast: { value: 1.1 },
+        uBrightness: { value: 1.0 },
+        uOpacity: { value: 0.8 },
+        uSteps: { value: 32 },
+        uColor1: { value: new Float32Array([0.08, 0.05, 0.25]) }, // Deep violet/navy
+        uColor2: { value: new Float32Array([0.23, 0.51, 0.96]) }, // Tech blue
+        uColor3: { value: new Float32Array([0.38, 0.65, 0.98]) }, // Light blue glow
+        uMouse: { value: new Float32Array([0, 0]) },
+        uMouseStrength: { value: 0.12 },
+        uMouseRadius: { value: 0.35 },
+        uEnableMouse: { value: 1.0 },
+        uMouseActive: { value: 0.0 },
+        uGrain: { value: 1.0 },
+        uGrainIntensity: { value: 0.04 }
+      }
+    });
+
+    const mesh = new Mesh(gl, { geometry, program });
+
+    const resize = () => {
+      const rect = container.getBoundingClientRect();
+      const w = Math.max(1, Math.floor(rect.width));
+      const h = Math.max(1, Math.floor(rect.height));
+      renderer.setSize(w, h);
+      const res = program.uniforms.iResolution.value;
+      res[0] = gl.drawingBufferWidth;
+      res[1] = gl.drawingBufferHeight;
+    };
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    let mouseTarget = [0, 0];
+    let mouseCurrent = [0, 0];
+    let mouseActive = 0;
+    let mouseActiveTarget = 0;
+
+    window.addEventListener('mousemove', e => {
+      const rect = container.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2.0;
+      const y = -((e.clientY - rect.top) / rect.height - 0.5) * 2.0;
+      mouseTarget = [x, y];
+      mouseActiveTarget = 1;
+    });
+
+    window.addEventListener('mouseleave', () => {
+      mouseActiveTarget = 0;
+    });
+
+    const t0 = performance.now();
+    const animate = t => {
+      program.uniforms.iTime.value = (t - t0) * 0.001;
+
+      mouseCurrent[0] += 0.05 * (mouseTarget[0] - mouseCurrent[0]);
+      mouseCurrent[1] += 0.05 * (mouseTarget[1] - mouseCurrent[1]);
+      const m = program.uniforms.uMouse.value;
+      m[0] = mouseCurrent[0];
+      m[1] = mouseCurrent[1];
+
+      mouseActive += 0.05 * (mouseActiveTarget - mouseActive);
+      program.uniforms.uMouseActive.value = mouseActive;
+
+      renderer.render({ scene: mesh });
+      requestAnimationFrame(animate);
+    };
+
+    requestAnimationFrame(animate);
+  } catch (err) {
+    console.warn('AcidSquares WebGL initialization skipped (fallback to CSS atmosphere):', err);
+  }
 }
