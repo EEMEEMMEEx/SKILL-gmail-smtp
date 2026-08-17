@@ -102,6 +102,7 @@ Content-Transfer-Encoding: base64
 
 ### 3.4 Headers ที่ห้ามใส่โดยไม่จำเป็น:
 * ❌ `X-Mailer:` (เช่น `X-Mailer: MyCustomBot 1.0` — มักโดน Spam Filter แบน)
+* ❌ `X-Priority: 3` หรือ `X-Entity-Ref-ID:` (ทำให้ Microsoft 365 EOP จัดประเภทเป็น Bot / Anomaly traffic)
 * ❌ `Auto-Submitted: auto-generated` (ทำให้ M365 Group และ Outlook Rule ปฏิเสธการส่งเข้า Inbox สมาชิก)
 * ❌ `Precedence: bulk` (ทำให้ตกแท็บ Promotions หรือ Junk)
 
@@ -109,22 +110,32 @@ Content-Transfer-Encoding: base64
 
 ## 4. เสาหลักที่ 3: Content & HTML Quality (คุณภาพของเนื้อหาและโค้ด HTML)
 
-### 4.1 กฎการออกแบบ HTML สำหรับ Email:
+### 4.1 กฎการออกแบบ HTML สำหรับ Email & ฟอนต์ภาษาไทย:
 1. **ใช้ Table-based Layout (`<table>`):** ไม่ใช้ `<div>` ซับซ้อนแบบ Flexbox/Grid ที่ Outlook Desktop ไม่รองรับ
-2. **ใช้ Inline CSS เท่านั้น:** ไม่ใช้ `<style>` ใน Header หรือ `<link rel="stylesheet">` ภายนอก
-3. **ห้ามมี Code ต้องห้าม:**
+2. **ใช้ Font Stack ภาษาไทยมาตรฐาน:**
+   ```css
+   font-family: 'Sarabun', 'Noto Sans Thai', 'Helvetica Neue', Arial, sans-serif;
+   ```
+3. **ใช้ Inline CSS เท่านั้น:** ไม่ใช้ `<style>` ใน Header หรือ `<link rel="stylesheet">` ภายนอก
+4. **Card UI Architecture:** ใช้การจัดวางแบบ Container กว้าง 600px สีขาว `#ffffff` บนพื้นหลัง `#f1f5f9` หรือ `#f5f5f5` ขอบมน 8-10px
+5. **ห้ามมี Code ต้องห้าม:**
    - ❌ `<script>` (JavaScript ทุกชนิด)
    - ❌ `<iframe>`, `<embed>`, `<object>`
    - ❌ `<form>`, `<input>` (ปุ่มต้องเป็นลิงก์ `<a>` เท่านั้น)
    - ❌ `data:image/base64` ขนาดใหญ่ (ควรใช้ URL รูปภาพภายนอกที่โหลดผ่าน HTTPS)
-4. **Text-to-Image Ratio:** ปริมาณตัวอักษรต้องมากกว่า 60% ของพื้นที่ทั้งหมด ห้ามส่งอีเมลที่เป็นรูปภาพแผ่นเดียวทั้งฉบับ
+6. **Text-to-Image Ratio:** ปริมาณตัวอักษรต้องมากกว่า 60% ของพื้นที่ทั้งหมด ห้ามส่งอีเมลที่เป็นรูปภาพแผ่นเดียวทั้งฉบับ
 
 ### 4.2 Link Hygiene (ความปลอดภัยของลิงก์):
 * ลิงก์ทุกจุดต้องเป็น **HTTPS**
 * **ห้ามใช้ URL Shorteners:** เช่น `bit.ly`, `tinyurl.com`, `t.co`, `goo.gl` (Spam Filter จะมองว่าพยายามซ่อน URL ปลายทาง)
 * หลีกเลี่ยงการเขียน URL หลอก เช่น แสดงข้อความ `https://paypal.com` แต่ลิงก์จริงชี้ไปที่ `https://otherdomain.com` (โดน Phishing Flag ทันที)
 
-### 4.3 คำกระตุ้นสแปม (Spam Trigger Words):
+### 4.3 กฎเหล็ก Anti-Phishing สำหรับการส่งเข้า Corporate Mailboxes (Microsoft Defender / EOP):
+* 🚫 **ห้ามส่ง Plaintext Password ในอีเมลเด็ดขาด:** การส่งรหัสผ่านชั่วคราว (เช่น `F0rth2026@dtrs`, `รหัสผ่านตั้งต้น`, `Temporary Password`) จาก Gmail ภายนอกเข้าโดเมนองค์กร จะถูก Microsoft Defender จัดเป็น **High-Confidence Phishing (SCL 9)** และถูก **Quarantine (กักกัน)** โดยไม่แจ้งเตือนผู้รับ
+* 🚫 **ห้ามใช้ Alarmist Security Banners:** หลีกเลี่ยงกล่องเตือนสีเหลือง/แดงที่มีคำว่า `Security Warning`, `Password Alert`, `⚠️ กรุณาเปลี่ยนรหัสผ่านทันที`
+* ✅ **เปลี่ยนเป็น Neutral Onboarding Card:** ส่งเฉพาะข้อมูลการเปิดสิทธิ์ (ชื่อ-สกุล, อีเมล, บทบาท, โครงการ) และแจ้งให้ผู้ใช้ตั้งรหัสผ่านผ่านระบบขององค์กร
+
+### 4.4 คำกระตุ้นสแปม (Spam Trigger Words):
 * หลีกเลี่ยงการใช้คำว่า: **"ฟรีทันที!", "รับเงิน", "ด่วนที่สุด!!!", "คลิกที่นี่เพื่อรับสิทธิ์", "100% FREE", "CONGRATULATIONS"**
 * ไม่ใช้ตัวพิมพ์ใหญ่ทั้งหมดใน Subject: ❌ `URGENT ACTION REQUIRED` → ✅ `แจ้งเตือน: สรุปรายงานประจำสัปดาห์`
 * ไม่ใช้เครื่องหมายวรรคตอนซ้ำๆ: ❌ `โปรดทราบ!!!` → ✅ `โปรดทราบ`

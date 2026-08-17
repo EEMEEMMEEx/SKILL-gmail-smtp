@@ -52,3 +52,53 @@
 | `550` | 5.7.1 Daily sending quota exceeded | ส่งเกินโควตา 500 หรือ 2,000 ฉบับ/วัน | หยุดส่งและรอให้ Rolling window รีเซ็ต |
 | `550` | 5.7.133 Sender not authenticated for group (M365) | ส่งเข้า M365 Group แต่กลุ่มปิดรับ External Sender | ให้ M365 Admin เปิด Allow external senders |
 | `554` | 5.7.1 Relay Access Denied | พยายามส่งในนามโดเมนอื่นที่ไม่ได้ยืนยัน | ให้ใช้ `From` ตรงกับบัญชีที่ Authenticate |
+
+---
+
+## 4. สถาปัตยกรรม Serverless & Dynamic Database Vault
+
+### 4.1 รูปแบบการจัดเก็บและดึงข้อมูล SMTP Dynamic จาก Database (Supabase Vault Pattern)
+ในแอปพลิเคชัน Full-Stack สมัยใหม่ (เช่น Vercel Serverless Function + Supabase):
+1. **Frontend Settings UI:** ผู้ดูแลระบบสามารถบันทึกค่า SMTP (`host`, `port`, `user`, `sender_email`, `sender_name`) ลงตาราง `system_settings` และรหัสผ่านลงตารางลับ `system_secrets`
+2. **Serverless Dispatcher (`/api/send-email`):** ดึงค่าการตั้งค่าจาก DB ผ่าน Service Role Key อัตโนมัติ:
+```javascript
+import nodemailer from 'nodemailer';
+import { createClient } from '@supabase/supabase-js';
+
+export default async function handler(req, res) {
+  // ดึง Dynamic Config จาก Supabase
+  const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const [{ data: cfg }, { data: secret }] = await Promise.all([
+    supabaseAdmin.from('system_settings').select('value').eq('key', 'smtp_config').maybeSingle(),
+    supabaseAdmin.from('system_secrets').select('secret_value').eq('key', 'smtp_password').maybeSingle()
+  ]);
+
+  const smtp = cfg?.value ? (typeof cfg.value === 'string' ? JSON.parse(cfg.value) : cfg.value) : {};
+  const host = smtp.host || process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = Number(smtp.port || process.env.SMTP_PORT || 465);
+  const user = smtp.user || process.env.SMTP_USER;
+  const pass = secret?.secret_value || process.env.SMTP_PASS;
+
+  const transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: { user, pass },
+    connectionTimeout: 10000,
+  });
+
+  // ส่งอีเมลตามมาตรฐาน RFC
+  // ...
+}
+```
+
+### 4.2 การแก้ไขปัญหา Static SPA (GitHub Pages) กับ Serverless API Endpoint (404 Fallback Trap)
+* **ปัญหา:** เมื่อ Deploy Frontend บน Static Host (เช่น GitHub Pages, S3) การยิง API ผ่าน Relative Path `/api/send-email` จะได้ `404 Not Found` หากในโค้ดมี Fallback ไปเรียก Supabase Auth Reset Password จะทำให้อีเมลกลายเป็น "Reset your password" ภาษาอังกฤษแทนแม่แบบของแอป
+* **วิธีแก้:** กำหนด Auto-Routing ฝั่ง Frontend เพื่อยิงข้ามโดเมนตรงไปยัง Vercel Production Serverless URL:
+```javascript
+const defaultEndpoint = typeof window !== 'undefined' && window.location.hostname.includes('github.io')
+  ? 'https://your-production-app.vercel.app/api/send-email'
+  : '/api/send-email';
+const endpoint = import.meta.env.VITE_EMAIL_SERVICE_URL || defaultEndpoint;
+```
+* **CORS Header:** ฝั่ง Vercel Serverless Function ต้องตั้งค่า `Access-Control-Allow-Origin: *` และตอบรับคำขอ `OPTIONS` เสมอ เพื่อรองรับ Preflight requests จาก Static Host
