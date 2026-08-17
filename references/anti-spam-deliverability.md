@@ -102,7 +102,6 @@ Content-Transfer-Encoding: base64
 
 ### 3.4 Headers ที่ห้ามใส่โดยไม่จำเป็น:
 * ❌ `X-Mailer:` (เช่น `X-Mailer: MyCustomBot 1.0` — มักโดน Spam Filter แบน)
-* ❌ `X-Priority: 3` หรือ `X-Entity-Ref-ID:` (ทำให้ Microsoft 365 EOP จัดประเภทเป็น Bot / Anomaly traffic)
 * ❌ `Auto-Submitted: auto-generated` (ทำให้ M365 Group และ Outlook Rule ปฏิเสธการส่งเข้า Inbox สมาชิก)
 * ❌ `Precedence: bulk` (ทำให้ตกแท็บ Promotions หรือ Junk)
 
@@ -110,32 +109,22 @@ Content-Transfer-Encoding: base64
 
 ## 4. เสาหลักที่ 3: Content & HTML Quality (คุณภาพของเนื้อหาและโค้ด HTML)
 
-### 4.1 กฎการออกแบบ HTML สำหรับ Email & ฟอนต์ภาษาไทย:
+### 4.1 กฎการออกแบบ HTML สำหรับ Email:
 1. **ใช้ Table-based Layout (`<table>`):** ไม่ใช้ `<div>` ซับซ้อนแบบ Flexbox/Grid ที่ Outlook Desktop ไม่รองรับ
-2. **ใช้ Font Stack ภาษาไทยมาตรฐาน:**
-   ```css
-   font-family: 'Sarabun', 'Noto Sans Thai', 'Helvetica Neue', Arial, sans-serif;
-   ```
-3. **ใช้ Inline CSS เท่านั้น:** ไม่ใช้ `<style>` ใน Header หรือ `<link rel="stylesheet">` ภายนอก
-4. **Card UI Architecture:** ใช้การจัดวางแบบ Container กว้าง 600px สีขาว `#ffffff` บนพื้นหลัง `#f1f5f9` หรือ `#f5f5f5` ขอบมน 8-10px
-5. **ห้ามมี Code ต้องห้าม:**
+2. **ใช้ Inline CSS เท่านั้น:** ไม่ใช้ `<style>` ใน Header หรือ `<link rel="stylesheet">` ภายนอก
+3. **ห้ามมี Code ต้องห้าม:**
    - ❌ `<script>` (JavaScript ทุกชนิด)
    - ❌ `<iframe>`, `<embed>`, `<object>`
    - ❌ `<form>`, `<input>` (ปุ่มต้องเป็นลิงก์ `<a>` เท่านั้น)
    - ❌ `data:image/base64` ขนาดใหญ่ (ควรใช้ URL รูปภาพภายนอกที่โหลดผ่าน HTTPS)
-6. **Text-to-Image Ratio:** ปริมาณตัวอักษรต้องมากกว่า 60% ของพื้นที่ทั้งหมด ห้ามส่งอีเมลที่เป็นรูปภาพแผ่นเดียวทั้งฉบับ
+4. **Text-to-Image Ratio:** ปริมาณตัวอักษรต้องมากกว่า 60% ของพื้นที่ทั้งหมด ห้ามส่งอีเมลที่เป็นรูปภาพแผ่นเดียวทั้งฉบับ
 
 ### 4.2 Link Hygiene (ความปลอดภัยของลิงก์):
 * ลิงก์ทุกจุดต้องเป็น **HTTPS**
 * **ห้ามใช้ URL Shorteners:** เช่น `bit.ly`, `tinyurl.com`, `t.co`, `goo.gl` (Spam Filter จะมองว่าพยายามซ่อน URL ปลายทาง)
 * หลีกเลี่ยงการเขียน URL หลอก เช่น แสดงข้อความ `https://paypal.com` แต่ลิงก์จริงชี้ไปที่ `https://otherdomain.com` (โดน Phishing Flag ทันที)
 
-### 4.3 กฎเหล็ก Anti-Phishing สำหรับการส่งเข้า Corporate Mailboxes (Microsoft Defender / EOP):
-* 🚫 **ห้ามส่ง Plaintext Password ในอีเมลเด็ดขาด:** การส่งรหัสผ่านชั่วคราว (เช่น `F0rth2026@dtrs`, `รหัสผ่านตั้งต้น`, `Temporary Password`) จาก Gmail ภายนอกเข้าโดเมนองค์กร จะถูก Microsoft Defender จัดเป็น **High-Confidence Phishing (SCL 9)** และถูก **Quarantine (กักกัน)** โดยไม่แจ้งเตือนผู้รับ
-* 🚫 **ห้ามใช้ Alarmist Security Banners:** หลีกเลี่ยงกล่องเตือนสีเหลือง/แดงที่มีคำว่า `Security Warning`, `Password Alert`, `⚠️ กรุณาเปลี่ยนรหัสผ่านทันที`
-* ✅ **เปลี่ยนเป็น Neutral Onboarding Card:** ส่งเฉพาะข้อมูลการเปิดสิทธิ์ (ชื่อ-สกุล, อีเมล, บทบาท, โครงการ) และแจ้งให้ผู้ใช้ตั้งรหัสผ่านผ่านระบบขององค์กร
-
-### 4.4 คำกระตุ้นสแปม (Spam Trigger Words):
+### 4.3 คำกระตุ้นสแปม (Spam Trigger Words):
 * หลีกเลี่ยงการใช้คำว่า: **"ฟรีทันที!", "รับเงิน", "ด่วนที่สุด!!!", "คลิกที่นี่เพื่อรับสิทธิ์", "100% FREE", "CONGRATULATIONS"**
 * ไม่ใช้ตัวพิมพ์ใหญ่ทั้งหมดใน Subject: ❌ `URGENT ACTION REQUIRED` → ✅ `แจ้งเตือน: สรุปรายงานประจำสัปดาห์`
 * ไม่ใช้เครื่องหมายวรรคตอนซ้ำๆ: ❌ `โปรดทราบ!!!` → ✅ `โปรดทราบ`
@@ -158,3 +147,24 @@ Content-Transfer-Encoding: base64
 1. **Spam Complaint Rate < 0.10%** (และต้องไม่เกิน 0.30% เด็ดขาด หากเกินจะถูก Gmail Drop อีเมลทิ้งทั้งหมด)
 2. **Hard Bounce Rate < 2.0%** (ต้องคอย Clean รายชื่ออีเมลที่ไม่มีตัวตนหรือยกเลิกการใช้งานแล้วออกจากระบบสม่ำเสมอ)
 3. **ส่งด้วยความเร็วสม่ำเสมอ (Rate Throttling):** ห้ามยิงอีเมล 500 ฉบับพร้อมกันภายใน 1 วินาที ให้ใช้ Worker / Queue หรือ Loop ที่มี `await delay(1000)` คั่นทุกฉบับ
+
+---
+
+## 6. เสาหลักที่ 5: Enterprise Anti-Phishing & Credential Security (การส่งเข้าอีเมลองค์กร)
+
+เมื่อส่งอีเมลแจ้งเตือน/เทียบเชิญจากระบบอัตโนมัติเข้าสู่อีเมลองค์กร (Microsoft 365, Google Workspace for Enterprise):
+
+### 6.1 Zero-Credential Exposure Policy (ห้ามส่งรหัสผ่านในอีเมล)
+* **กลไกความปลอดภัย:** ระบบตรวจจับภัยคุกคามองค์กร (Microsoft Defender / Proofpoint / Mimecast) จะจัดอีเมลที่มี Plaintext Password + ลิงก์เข้าสู่ระบบ ที่ส่งมาจากผู้ให้บริการฟรีภายนอก (`@gmail.com`) เป็น **High-Confidence Phishing / Credential Harvesting**
+* **ข้อกำหนด:**
+  - ❌ ห้ามระบุรหัสผ่านชั่วคราว, รหัสผ่านตั้งต้น (`Initial Access`), หรือ Password String ใดๆ ในเนื้อหาอีเมล
+  - ✅ ส่งเฉพาะข้อมูลบัญชีทั่วไป (ชื่อ, อีเมล, สิทธิ์/บทบาท) และปุ่มลิงก์เข้าสู่ระบบที่เป็นทางการ
+  - ✅ กำหนดให้ผู้ใช้ใช้รหัสผ่านตั้งต้นตามนโยบายองค์กร หรือตั้งค่ารหัสผ่านผ่าน Secure Magic Link / Password Reset Flow ที่ส่งตรงจากระบบ Identity Provider
+
+### 6.2 Header Cleanliness สำหรับ Enterprise Gateway
+* ❌ **ห้ามใส่ Header เฉพาะกิจ:** เช่น `X-Priority: 3`, `X-Entity-Ref-ID`, `X-Mailer`
+* ✅ **ใส่ Header ภาษาและการตอบกลับ:** `Content-Language: th`, `Reply-To: <sender-email>`, `MIME-Version: 1.0`
+
+### 6.3 Dynamic SMTP Configuration ในระบบ Serverless
+* **การจัดการ Credential:** ในสถาปัตยกรรม Serverless (เช่น Vercel API / Cloud Functions) ห้ามพึ่งพาเฉพาะ Hardcoded หรือ Static Environment Variables เพียงอย่างเดียว
+* **Database Vault:** ควรดึงการตั้งค่า SMTP จากตารางการตั้งค่าระบบ (`system_settings`) และรหัสผ่านจาก Secure Vault (`system_secrets`) ด้วย Service Role Key เพื่อให้ Admin สามารถอัปเดตรหัสผ่าน SMTP ผ่านหน้า Web UI ได้แบบ Real-time โดยไม่ต้อง Build/Deploy ใหม่

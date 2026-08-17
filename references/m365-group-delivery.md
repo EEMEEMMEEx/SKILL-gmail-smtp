@@ -1,53 +1,82 @@
-# Microsoft 365 Group & Outlook Email Delivery Guide
+# Microsoft 365 Enterprise & Corporate Inbox Delivery Guide (Exchange Online Protection & Defender)
 
-เอกสารคู่มือเชิงลึกสำหรับการแก้ปัญหาการส่งอีเมลเข้า Microsoft 365 (M365) Unified Groups, Distribution Lists และ Outlook Mailbox
-
----
-
-## 1. สาเหตุหลักที่ทำให้ส่งเข้า Microsoft 365 Group ไม่สำเร็จ
-
-เมื่อส่งอีเมลจากภายนอก (เช่น Gmail SMTP) ไปยังอีเมลกลุ่มของ M365 (เช่น `committee@yourorg.onmicrosoft.com` หรือ `@yourcompany.com`) ปัญหาส่วนใหญ่เกิดจาก 5 ปัจจัยหลักดังนี้:
-
-### สาเหตุที่ 1: การบล็อกผู้ส่งภายนอกตามค่าเริ่มต้น (External Sender Rejection)
-* **พฤติกรรม:** M365 Unified Groups และ Distribution Lists ถูกสร้างขึ้นโดยมีค่าเริ่มต้นกำหนดให้ **ปฏิเสธ (Reject)** อีเมลที่ส่งมาจากผู้ส่งภายนอกองค์กร (Non-authenticated senders)
-* **รหัสข้อผิดพลาด (NDR):**
-  - `550 5.7.133 RESOLVER.RST.SenderNotAuthenticatedForGroup; Authentication required; Delivery restriction check failed because the sender was not authenticated when sending to this group`
-  - `550 5.7.1 Transport; Access Denied`
-
-### สาเหตุที่ 2: สมาชิกกลุ่มไม่ได้รับสำเนาเข้า Inbox ส่วนตัว (Group Subscription Behavior)
-* **พฤติกรรม:** อีเมลส่งเข้าไปที่ Group Mailbox สำเร็จ (สามารถเปิดดูได้ใน Outlook ผ่านแถบ Groups) แต่สมาชิกแต่ละคน **ไม่ได้รับแจ้งเตือนและไม่มีอีเมลใน Personal Inbox**
-* **สาเหตุ:** M365 มีฟังก์ชัน "Follow in Inbox" ซึ่งโดยค่าเริ่มต้นสมาชิกใหม่บางประเภทจะไม่ได้เปิดตัวเลือกนี้ไว้
-
-### สาเหตุที่ 3: Exchange Online Protection (EOP) กรองเป็น Spam หรือ Quarantine
-* **พฤติกรรม:** อีเมลถูก EOP ตรวจจับว่ามีคะแนนความเสี่ยงสูง (Spam Confidence Level: SCL 5-9) หรือมี Header ที่ตรงกับเกณฑ์ Bulk/Bot ทำให้อีเมลตกไปอยู่ใน Quarantine หรือ Junk Email
-* **ตัวกระตุ้นของ EOP:**
-  - Header `Auto-Submitted: auto-generated` หรือ `Auto-Submitted: auto-replied`
-  - Header `Precedence: bulk` หรือ `Precedence: list`
-  - การส่งจาก Free Mail provider (@gmail.com) โดยมีเนื้อหาเป็นข้อความแจ้งเตือนอัตโนมัติซ้ำๆ ในเวลาสั้นๆ
-
-### สาเหตุที่ 4: SPF / DKIM / DMARC Alignment Failure (Spoofing Detection)
-* **พฤติกรรม:** ถ้าส่งผ่าน Gmail SMTP แต่ระบุ `From: user@company.com` โดยที่โดเมนไม่ได้ทำ SPF `include:_spf.google.com` หรือไม่มี DKIM Key ของ Google → M365 DMARC Policy จะ Reject หรือ Quarantine ทันที
-
-### สาเหตุที่ 5: Message Moderation (การรออนุมัติข้อความ)
-* **พฤติกรรม:** กลุ่มถูกตั้งค่าเปิด Moderation ไว้ ทำให้ข้อความจากภายนอกต้องรอให้ Group Owner กด Approve ใน Outlook ก่อนจึงจะส่งต่อให้สมาชิก
+เอกสารคู่มือเชิงลึกสำหรับการแก้ปัญหาการส่งอีเมลเข้า Microsoft 365 (M365) Corporate Inboxes (เช่น `@forth.co.th`), Unified Groups, Distribution Lists และการรับมือกับระบบความปลอดภัย Microsoft Defender for Office 365
 
 ---
 
-## 2. แนวทางแก้ไขและแนวทางปฏิบัติ (Actionable Solutions)
+## 1. สาเหตุหลักที่ทำให้ส่งเข้า Microsoft 365 / Corporate Inboxes ไม่สำเร็จ
 
-### วิธีแก้ไขที่ 1: เปิดให้รับผู้ส่งภายนอก (Allow External Senders)
+เมื่อส่งอีเมลจาก Gmail SMTP (`@gmail.com` หรือ Custom Domain) ไปยังอีเมลองค์กร ปัญหาส่วนใหญ่เกิดจาก 6 ปัจจัยหลักดังนี้:
 
-#### ผ่าน Exchange Admin Center (Web UI):
-1. เข้าสู่ [Exchange Admin Center](https://admin.exchange.microsoft.com/) ด้วยบัญชีผู้ดูแลระบบ (Admin)
-2. ไปที่เมนู **Recipients** → **Groups**
-3. ค้นหาและคลิกเลือกกลุ่มที่ต้องการ (เช่น Microsoft 365 Group หรือ Distribution List)
-4. ไปที่แท็บ **Settings**
-5. ในส่วน **General settings** ให้ติ๊กเลือก:
-   - ✅ **"Allow external senders to email this group"** (หรือ "Let people outside the organization email the group")
-   - ✅ **"Send copies of group conversations and events to group members"**
-6. คลิก **Save**
+### สาเหตุที่ 1: Microsoft Defender High-Confidence Phishing Quarantining (สาเหตุสำคัญที่สุด)
+* **พฤติกรรม:** อีเมลส่งออกจาก Gmail SMTP สำเร็จ (ขึ้นใน Gmail Sent) แต่ **ไม่ปรากฏใน Inbox หรือ Junk ของผู้รับใน Outlook** เลย
+* **กลไกการทำงานของ Defender:**
+  - เมื่อผู้ส่งเป็น Free Email หรือ Third-party SMTP (`@gmail.com`) ส่งเข้าสู่โดเมนองค์กร
+  - **หากตรวจพบข้อความระบุรหัสผ่าน (Password)** เช่น `รหัสผ่านตั้งต้น (Initial Access)`, `รหัสผ่านชั่วคราว: F0rth2026@...` พร้อมกับลิงก์เข้าสู่ระบบ (`Log in / Sign in`) ที่ชี้ไปยังโดเมนภายนอก (`github.io`, `vercel.app`)
+  - Defender จะตีตราอีเมลฉบับนั้นเป็น **High-Confidence Phishing (Spam Confidence Level: SCL 9)**
+  - นโยบายความปลอดภัยของ Microsoft 365 สำหรับ Phishing คือการนำเข้า **Admin Quarantine โดยตรง** ทำให้ผู้รับไม่เห็นอีเมลแม้แต่ใน Junk Mail!
+* **แนวทางแก้ไข:** ถอดการส่งรหัสผ่านในเนื้อหาอีเมลออกทั้งหมด เปลี่ยนเป็น **Clean Administrative Notification** แจ้งข้อมูลบัญชีและปุ่มเข้าใช้งานเท่านั้น
 
-#### ผ่าน PowerShell (แนะนำสำหรับ Admin):
+### สาเหตุที่ 2: Custom Headers ที่กระตุ้น Bot Anomaly Heuristics
+* **พฤติกรรม:** การใส่ Header ที่ไม่ได้มาตรฐาน เช่น `X-Priority: 3`, `X-Entity-Ref-ID: <uuid>`, หรือ `X-Mailer: <script>`
+* **ผลกระทบ:** EOP สแกนพบความผิดปกติของ Header ที่สร้างโดย Script อัตโนมัติ ทำให้คะแนน Spam Score เพิ่มขึ้น
+* **แนวทางแก้ไข:** ถอด `X-` headers ทั้งหมดออก ใช้เฉพาะมาตรฐาน RFC: `Date`, `From`, `To`, `Subject`, `Message-ID`, `Content-Language: th`, `Reply-To`
+
+### สาเหตุที่ 3: การบล็อกผู้ส่งภายนอกของ M365 Group (External Sender Rejection)
+* **พฤติกรรม:** ส่งเข้า Distribution List หรือ Microsoft 365 Group แล้วได้รับ NDR ตีกลับ `550 5.7.133 RESOLVER.RST.SenderNotAuthenticatedForGroup`
+* **แนวทางแก้ไข:** สั่งเปิดรับผู้ส่งภายนอกผ่าน Exchange Admin Center หรือ PowerShell (`Set-UnifiedGroup -RequireSenderAuthenticationEnabled $false`)
+
+### สาเหตุที่ 4: สมาชิกกลุ่มไม่ได้รับสำเนาเข้า Inbox ส่วนตัว (Group Subscription Behavior)
+* **พฤติกรรม:** อีเมลเข้า Group Mailbox แต่ไม่เด้งเข้า Personal Inbox ของสมาชิก
+* **แนวทางแก้ไข:** สั่ง `Set-UnifiedGroup -AutoSubscribeNewMembers $true`
+
+### สาเหตุที่ 5: SPF / DKIM / DMARC Alignment Failure
+* **พฤติกรรม:** ส่งผ่าน Gmail SMTP แต่ปลอม Header `From:` เป็นโดเมนอื่นที่ไม่ได้ลงทะเบียน SPF กับ Google ทำให้ DMARC Fail
+
+### สาเหตุที่ 6: Frontend API Endpoint 404 & Silent Auth Fallback
+* **พฤติกรรม:** Frontend บน GitHub Pages เรียก Relative URL `/api/send-email` (404) ทำให้ Client Fallback ไปเรียก Supabase Auth ซึ่งส่งอีเมลภาษาอังกฤษ "Reset your password" ออกมาแทน
+
+---
+
+## 2. แนวทางปฏิบัติสำหรับระบบอีเมลระดับ Enterprise (Actionable Runbook)
+
+### กฎข้อที่ 1: การออกแบบ Template แบบ Zero-Credential Exposure
+```html
+<!-- ปลอดภัย 100% ผ่านตัวกรอง Defender / EOP -->
+<table role="presentation" width="100%" style="max-width:600px; background-color:#ffffff; font-family:'Sarabun', 'Noto Sans Thai', Arial, sans-serif;">
+  <tr><td style="padding:24px;">
+    <h2>แจ้งข้อมูลบัญชีผู้ใช้งานระบบ StockFlow</h2>
+    <p>เรียน คุณ สมชาย ใจดี,</p>
+    <p>ผู้ดูแลระบบได้สร้างและเปิดสิทธิ์การใช้งานสำหรับคุณเรียบร้อยแล้ว</p>
+    <table style="background-color:#f8fafc; border:1px solid #e2e8f0; width:100%; padding:12px;">
+      <tr><td>ชื่อ-สกุล:</td><td>สมชาย ใจดี</td></tr>
+      <tr><td>อีเมล:</td><td>somchai@forth.co.th</td></tr>
+      <tr><td>บทบาท:</td><td>Operator</td></tr>
+    </table>
+    <div style="text-align:center; margin-top:20px;">
+      <a href="https://stock-flow.vercel.app" style="background-color:#2563eb; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px;">เข้าสู่ระบบ</a>
+    </div>
+  </td></tr>
+</table>
+```
+
+### กฎข้อที่ 2: มาตรฐาน Header สำหรับ Microsoft 365
+```http
+Date: Mon, 17 Aug 2026 20:30:00 +0700
+Message-ID: <uuid@smtp.gmail.com>
+From: "StockFlow Notification" <stockflow.noreply.app@gmail.com>
+To: recipient@forth.co.th
+Subject: =?UTF-8?B?...?=
+Reply-To: stockflow.noreply.app@gmail.com
+Content-Language: th
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="----=_Part_..."
+```
+
+---
+
+## 3. PowerShell Commands สำหรับ M365 Admin
+
 ```powershell
 # เชื่อมต่อ Exchange Online
 Connect-ExchangeOnline -UserPrincipalName admin@yourdomain.com
@@ -57,7 +86,7 @@ Set-UnifiedGroup -Identity "group-email@yourdomain.com" `
   -RequireSenderAuthenticationEnabled $false `
   -AutoSubscribeNewMembers $true
 
-# 2. สำหรับ Distribution Group (DL แบบดั้งเดิม)
+# 2. สำหรับ Distribution Group (DL)
 Set-DistributionGroup -Identity "dl-email@yourdomain.com" `
   -RequireSenderAuthenticationEnabled $false
 
@@ -67,42 +96,12 @@ Get-UnifiedGroup -Identity "group-email@yourdomain.com" | Select-Object DisplayN
 
 ---
 
-### วิธีแก้ไขที่ 2: ปรับแต่ง Headers และ Format ของอีเมลให้ผ่านเกณฑ์ EOP
+## 4. Mail Flow Rule ใน Microsoft 365 (Bypass Spam สำหรับระบบภายใน)
 
-ฝั่ง Application ที่ใช้ Gmail SMTP ต้องปรับแต่ง Header และเนื้อหาดังนี้:
+หากต้องการให้ M365 ไว้วางใจอีเมลจากระบบแจ้งเตือนเสมอ:
+1. ใน EAC ไปที่ **Mail flow** → **Rules** → **Add a rule**
+2. ตั้งชื่อ: `Bypass Spam for App Notifications`
+3. **Apply this rule if:** Sender is `stockflow.noreply.app@gmail.com`
+4. **Do the following:** Set the spam confidence level (SCL) to: **Bypass spam filtering (-1)**
+5. คลิก **Save** และเปิดใช้งาน (Enable) Rule
 
-```http
-Date: Sat, 15 Aug 2026 08:15:00 +0700
-Message-ID: <unique-uuid@smtp.gmail.com>
-From: =?UTF-8?B?4Lij4Liw4Lia4Lia4LmB4LiI4LmJ4LiH4LmA4LiV4Li34Lit4LiZ?= <your-account@gmail.com>
-To: group-email@yourdomain.com
-Subject: =?UTF-8?B?4LmC4LiI4LmJ4LiH4LiB4Liy4Lij4LmB4LiI4LmJ4LiH4LmA4LiV4Li34Lit4LiZ...=?=
-MIME-Version: 1.0
-Content-Type: multipart/alternative; boundary="----=_Part_0_123456789"
-```
-
-#### กฎการปรับ Header สำหรับ M365:
-1. **ห้ามใส่ `Auto-Submitted` Header:**
-   - ห้ามส่ง `Auto-Submitted: auto-generated` เพราะ M365 Group Rules จะระบุว่าเป็น Non-human mail และอาจข้ามการส่งต่อเข้า Inbox ของสมาชิก
-2. **ห้ามใส่ `Precedence: bulk`:**
-   - ทำให้ M365 จัดเป็นจดหมายขยะหรือโปรโมชัน
-3. **ห้ามใส่ `X-Mailer`:**
-   - หลีกเลี่ยงการเปิดเผย library ที่ใช้ส่ง เช่น `X-Mailer: nodemailer` หรือ `X-Mailer: python-smtplib`
-4. **Envelope From และ Header From ต้องตรงกัน:**
-   - ส่งผ่าน SMTP Auth ด้วย `your-account@gmail.com` ส่วน Header `From:` ก็ต้องเป็น `your-account@gmail.com`
-
----
-
-### วิธีแก้ไขที่ 3: ตั้งค่า Mail Flow Rule ใน Microsoft 365 (Bypass Spam สำหรับระบบภายใน)
-
-หากต้องการให้ M365 ไว้วางใจอีเมลจาก Gmail SMTP ระบบนี้เสมอ ให้ Admin เพิ่ม Mail Flow Rule:
-
-1. ใน EAC ไปที่ **Mail flow** → **Rules**
-2. คลิก **Add a rule** → **Create a new rule**
-3. ตั้งชื่อ: `Bypass Spam for App Notifications`
-4. **Apply this rule if:**
-   - Sender is: `your-account@gmail.com`
-   - AND Recipient is: `group-email@yourdomain.com`
-5. **Do the following:**
-   - Set the spam confidence level (SCL) to: **Bypass spam filtering (-1)**
-6. คลิก **Save** และเปิดใช้งาน (Enable) Rule

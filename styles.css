@@ -940,3 +940,219 @@ body {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ==========================================================================
+   Enterprise Email & Template Preview
+   ========================================================================== */
+.badge-danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: #F87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-success {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-info {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60A5FA;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.template-preview-container {
+  background: #06090F;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.template-preview-bar {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.template-preview-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.template-email-canvas {
+  background: #F1F5F9;
+  padding: 24px;
+  min-height: 300px;
+  overflow-y: auto;
+  color: #0F172A;
+}
+
+.email-mockup-card {
+  max-width: 540px;
+  margin: 0 auto;
+  background: #FFFFFF;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  border: 1px solid #E2E8F0;
+  font-family: 'Sarabun', 'Noto Sans Thai', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+}
+
+.email-mockup-header {
+  padding: 20px 24px 16px 24px;
+  border-bottom: 1px solid #E2E8F0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.email-mockup-body {
+  padding: 20px 24px;
+  color: #334155;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.email-info-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.email-info-table td {
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.email-info-table tr:last-child td {
+  border-bottom: none;
+}
+
+.email-info-table td.label-col {
+  color: #64748B;
+  width: 130px;
+  font-weight: 500;
+}
+
+.email-info-table td.value-col {
+  color: #0F172A;
+  font-weight: 600;
+}
+
+.email-cta-btn {
+  display: inline-block;
+  background-color: #2563EB;
+  color: #FFFFFF !important;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 11px 24px;
+  border-radius: 6px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+  margin-top: 10px;
+}
+
+.email-footer-notice {
+  font-size: 0.78rem;
+  color: #94A3B8;
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px dashed #E2E8F0;
+  line-height: 1.5;
+}
+
+/* Troubleshooting Cards */
+.troubleshoot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 860px) {
+  .troubleshoot-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.troubleshoot-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: 26px;
+  transition: all var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+}
+
+.troubleshoot-card:hover {
+  border-color: var(--border-active);
+  background: var(--bg-card-hover);
+  transform: translateY(-3px);
+}
+
+.troubleshoot-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.troubleshoot-title {
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 10px;
+}
+
+.troubleshoot-problem {
+  font-size: 0.88rem;
+  color: #FCA5A5;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+.troubleshoot-solution {
+  font-size: 0.88rem;
+  color: #CBD5E1;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  line-height: 1.6;
+  margin-top: auto;
+}
+
+.troubleshoot-solution code {
+  background: rgba(0, 0, 0, 0.35);
+  color: #34D399;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+

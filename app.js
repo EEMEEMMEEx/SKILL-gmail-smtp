@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   initRFC2047Encoder();
   initM365Generator();
+  initZeroCredentialTemplate();
   initDeliverabilityCalculator();
   initCodeGenerator();
   initClipboardButtons();
@@ -72,11 +73,9 @@ function initTabs() {
    ========================================================================== */
 function encodeRFC2047(str) {
   if (!str) return '';
-  // Check if string contains only ASCII standard characters
   if (/^[\x20-\x7E]*$/.test(str)) {
     return str;
   }
-  // Convert UTF-8 string to Base64 in browser
   const utf8Bytes = new TextEncoder().encode(str);
   let binaryStr = '';
   for (let i = 0; i < utf8Bytes.length; i++) {
@@ -110,6 +109,8 @@ function initRFC2047Encoder() {
       outputHeaders.textContent = 
 `From: ${encodedName} <${senderEmail}>
 Subject: ${encodedSubject}
+Reply-To: ${senderEmail}
+Content-Language: th
 MIME-Version: 1.0
 Content-Type: multipart/alternative; boundary="----=_Part_01"`;
     }
@@ -122,45 +123,214 @@ Content-Type: multipart/alternative; boundary="----=_Part_01"`;
 }
 
 /* ==========================================================================
-   Tool 2: Microsoft 365 Group PowerShell Generator
+   Tool 2: Microsoft 365 Group & Enterprise Delivery Suite Generator
    ========================================================================== */
 function initM365Generator() {
+  const groupTypeSelect = document.getElementById('m365-mode-select');
   const groupEmailInput = document.getElementById('m365-group-email');
   const optExternal = document.getElementById('m365-opt-external');
   const optAutoSub = document.getElementById('m365-opt-autosub');
+  const bypassSenderInput = document.getElementById('m365-bypass-sender');
   const outputEl = document.getElementById('m365-powershell-output');
 
   function update() {
+    const mode = groupTypeSelect ? groupTypeSelect.value : 'unified';
     const email = groupEmailInput && groupEmailInput.value.trim() ? groupEmailInput.value.trim() : 'devops-alerts@company.com';
+    const bypassSender = bypassSenderInput && bypassSenderInput.value.trim() ? bypassSenderInput.value.trim() : 'stockflow.noreply.app@gmail.com';
     const allowExternal = optExternal ? optExternal.checked : true;
     const autoSubscribe = optAutoSub ? optAutoSub.checked : true;
 
-    const commands = [
-      `# 1. Connect to Exchange Online (Run once in PowerShell as Admin)`,
-      `Connect-ExchangeOnline -UserPrincipalName admin@yourdomain.com`,
-      ``,
-      `# 2. Configure M365 Unified Group Delivery Policy`,
-      `Set-UnifiedGroup -Identity "${email}" \\`,
-      `  -RequireSenderAuthenticationEnabled ${allowExternal ? '$false' : '$true'} \\`,
-      `  -AutoSubscribeNewMembers ${autoSubscribe ? '$true' : '$false'}`,
-      ``,
-      `# 3. Verify Group Configuration Status`,
-      `Get-UnifiedGroup -Identity "${email}" | Select-Object DisplayName, RequireSenderAuthenticationEnabled, AutoSubscribeNewMembers`
-    ];
+    let commands = [];
+
+    if (mode === 'unified') {
+      commands = [
+        `# ==========================================================================`,
+        `# Microsoft 365 Unified Group (Modern M365 Group)`,
+        `# ==========================================================================`,
+        `# 1. Connect to Exchange Online (Run once as Global Admin / Exchange Admin)`,
+        `Connect-ExchangeOnline -UserPrincipalName admin@yourdomain.com`,
+        ``,
+        `# 2. Permit External Senders & Auto-Subscribe Members`,
+        `Set-UnifiedGroup -Identity "${email}" \\`,
+        `  -RequireSenderAuthenticationEnabled ${allowExternal ? '$false' : '$true'} \\`,
+        `  -AutoSubscribeNewMembers ${autoSubscribe ? '$true' : '$false'}`,
+        ``,
+        `# 3. Verify Configuration Status`,
+        `Get-UnifiedGroup -Identity "${email}" | Select-Object DisplayName, RequireSenderAuthenticationEnabled, AutoSubscribeNewMembers`
+      ];
+    } else if (mode === 'dl') {
+      commands = [
+        `# ==========================================================================`,
+        `# Distribution List (Classic Exchange Distribution Group)`,
+        `# ==========================================================================`,
+        `Connect-ExchangeOnline -UserPrincipalName admin@yourdomain.com`,
+        ``,
+        `# 1. Allow External Senders (Fix 550 5.7.133 NDR Rejection)`,
+        `Set-DistributionGroup -Identity "${email}" \\`,
+        `  -RequireSenderAuthenticationEnabled ${allowExternal ? '$false' : '$true'}`,
+        ``,
+        `# 2. Verify DL Configuration`,
+        `Get-DistributionGroup -Identity "${email}" | Select-Object DisplayName, RequireSenderAuthenticationEnabled`
+      ];
+    } else if (mode === 'bypass') {
+      commands = [
+        `# ==========================================================================`,
+        `# Mail Flow Rule (Bypass Spam / Set SCL -1 for Trusted Notification App)`,
+        `# ==========================================================================`,
+        `Connect-ExchangeOnline -UserPrincipalName admin@yourdomain.com`,
+        ``,
+        `# 1. Create Transport Rule to Bypass Spam Filtering for Application Sender`,
+        `New-TransportRule -Name "Bypass Spam for App Notifications" \\`,
+        `  -SenderAddressMatchesPatterns "${bypassSender}" \\`,
+        `  -SetSCL -1 \\`,
+        `  -State Enabled \\`,
+        `  -Comments "Allow external Gmail SMTP notifications without Defender quarantine"`,
+        ``,
+        `# 2. Verify Transport Rule`,
+        `Get-TransportRule -Identity "Bypass Spam for App Notifications" | Select-Object Name, SetSCL, State`
+      ];
+    }
 
     if (outputEl) {
       outputEl.textContent = commands.join('\n');
     }
   }
 
+  if (groupTypeSelect) groupTypeSelect.addEventListener('change', update);
   if (groupEmailInput) groupEmailInput.addEventListener('input', update);
+  if (bypassSenderInput) bypassSenderInput.addEventListener('input', update);
   if (optExternal) optExternal.addEventListener('change', update);
   if (optAutoSub) optAutoSub.addEventListener('change', update);
   update();
 }
 
 /* ==========================================================================
-   Tool 3: Anti-Spam Deliverability Score Calculator
+   Tool 3: Zero-Credential Template Generator & Live Preview
+   ========================================================================== */
+function initZeroCredentialTemplate() {
+  const sysNameInput = document.getElementById('template-sys-name');
+  const recipientNameInput = document.getElementById('template-recipient-name');
+  const recipientEmailInput = document.getElementById('template-recipient-email');
+  const userRoleInput = document.getElementById('template-user-role');
+  const departmentInput = document.getElementById('template-department');
+  const loginUrlInput = document.getElementById('template-login-url');
+  const brandColorInput = document.getElementById('template-brand-color');
+
+  // Preview elements
+  const mockSysName = document.getElementById('email-mock-sys-name');
+  const mockRecipient = document.getElementById('email-mock-recipient');
+  const mockNameVal = document.getElementById('email-mock-name-val');
+  const mockEmailVal = document.getElementById('email-mock-email-val');
+  const mockRoleVal = document.getElementById('email-mock-role-val');
+  const mockDeptVal = document.getElementById('email-mock-dept-val');
+  const mockBtn = document.getElementById('email-mock-btn');
+
+  // Code output
+  const templateCodeEl = document.getElementById('template-html-code');
+
+  function update() {
+    const sysName = sysNameInput ? sysNameInput.value.trim() || 'StockFlow Management System' : 'StockFlow Management System';
+    const recipientName = recipientNameInput ? recipientNameInput.value.trim() || 'สมชาย ใจดี' : 'สมชาย ใจดี';
+    const recipientEmail = recipientEmailInput ? recipientEmailInput.value.trim() || 'somchai@company.com' : 'somchai@company.com';
+    const userRole = userRoleInput ? userRoleInput.value.trim() || 'Operator' : 'Operator';
+    const department = departmentInput ? departmentInput.value.trim() || 'Warehouse Central 01' : 'Warehouse Central 01';
+    const loginUrl = loginUrlInput ? loginUrlInput.value.trim() || 'https://stock-flow.vercel.app' : 'https://stock-flow.vercel.app';
+    const brandColor = brandColorInput ? brandColorInput.value || '#2563EB' : '#2563EB';
+
+    // Update live preview
+    if (mockSysName) mockSysName.textContent = sysName;
+    if (mockRecipient) mockRecipient.textContent = `เรียน คุณ ${recipientName},`;
+    if (mockNameVal) mockNameVal.textContent = recipientName;
+    if (mockEmailVal) mockEmailVal.textContent = recipientEmail;
+    if (mockRoleVal) mockRoleVal.textContent = userRole;
+    if (mockDeptVal) mockDeptVal.textContent = department;
+    if (mockBtn) {
+      mockBtn.href = loginUrl;
+      mockBtn.style.backgroundColor = brandColor;
+    }
+
+    // Generate production-safe HTML with Zero-Credential design
+    const generatedHtml = 
+`<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>แจ้งข้อมูลบัญชีผู้ใช้งานระบบ</title>
+</head>
+<body style="margin:0; padding:0; background-color:#F1F5F9; font-family:'Sarabun', 'Noto Sans Thai', Arial, sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#F1F5F9; padding:24px 0;">
+    <tr>
+      <td align="center">
+        <!-- Main Card (Defender Anti-Phishing Compliant / SCL-0) -->
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:580px; background-color:#FFFFFF; border-radius:8px; overflow:hidden; border:1px solid #E2E8F0; box-shadow:0 4px 12px rgba(0,0,0,0.06);">
+          <!-- Header Bar -->
+          <tr>
+            <td style="padding:24px 28px 18px 28px; border-bottom:2px solid #F1F5F9; background-color:#FFFFFF;">
+              <h2 style="margin:0; font-size:1.25rem; font-weight:700; color:#0F172A;">${sysName}</h2>
+              <p style="margin:4px 0 0 0; font-size:0.85rem; color:#64748B;">การแจ้งเตือนบัญชีผู้ใช้งานระบบอย่างเป็นทางการ</p>
+            </td>
+          </tr>
+          <!-- Body Content -->
+          <tr>
+            <td style="padding:24px 28px; color:#334155; font-size:0.92rem; line-height:1.6;">
+              <p style="margin:0 0 12px 0;">เรียน คุณ <strong>${recipientName}</strong>,</p>
+              <p style="margin:0 0 16px 0;">ผู้ดูแลระบบได้สร้างและเปิดสิทธิ์การเข้าใช้งานระบบสำหรับบัญชีของคุณเรียบร้อยแล้ว โดยมีรายละเอียดข้อมูลบัญชีดังนี้:</p>
+              
+              <!-- Clean Metadata Table -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#F8FAFC; border:1px solid #E2E8F0; border-radius:6px; margin:16px 0; font-size:0.88rem;">
+                <tr>
+                  <td style="padding:10px 14px; color:#64748B; width:130px; border-bottom:1px solid #E2E8F0;">ชื่อ-นามสกุล:</td>
+                  <td style="padding:10px 14px; color:#0F172A; font-weight:600; border-bottom:1px solid #E2E8F0;">${recipientName}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 14px; color:#64748B; border-bottom:1px solid #E2E8F0;">อีเมลประจำตัว:</td>
+                  <td style="padding:10px 14px; color:#0F172A; font-weight:600; border-bottom:1px solid #E2E8F0;">${recipientEmail}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 14px; color:#64748B; border-bottom:1px solid #E2E8F0;">บทบาทสิทธิ์ (Role):</td>
+                  <td style="padding:10px 14px; color:#0F172A; font-weight:600; border-bottom:1px solid #E2E8F0;">${userRole}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 14px; color:#64748B;">สังกัด / โครงการ:</td>
+                  <td style="padding:10px 14px; color:#0F172A; font-weight:600;">${department}</td>
+                </tr>
+              </table>
+
+              <!-- Call to Action Button -->
+              <div style="text-align:center; margin:24px 0 16px 0;">
+                <a href="${loginUrl}" target="_blank" style="display:inline-block; background-color:${brandColor}; color:#FFFFFF; text-decoration:none; font-weight:600; font-size:0.95rem; padding:12px 28px; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.15);">
+                  เข้าสู่ระบบเพื่อเริ่มใช้งาน
+                </a>
+              </div>
+
+              <!-- Security Notice (Zero-Credential Guidance) -->
+              <div style="margin-top:20px; padding-top:14px; border-top:1px dashed #CBD5E1; font-size:0.8rem; color:#64748B; line-height:1.5;">
+                <strong style="color:#0F172A;">คำแนะนำด้านความปลอดภัย:</strong> โปรดใช้รหัสผ่านตั้งต้นขององค์กรเพื่อเข้าสู่ระบบ หรือติดต่อผู้ดูแลระบบหากไม่ได้รับรหัสผ่าน เพื่อความปลอดภัยสูงสุดระบบจะไม่มีการระบุรหัสผ่านในอีเมล
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    if (templateCodeEl) {
+      templateCodeEl.textContent = generatedHtml;
+    }
+  }
+
+  const inputs = [sysNameInput, recipientNameInput, recipientEmailInput, userRoleInput, departmentInput, loginUrlInput, brandColorInput];
+  inputs.forEach(inp => {
+    if (inp) inp.addEventListener('input', update);
+  });
+  update();
+}
+
+/* ==========================================================================
+   Tool 4: Anti-Spam & Defender Deliverability Score Calculator
    ========================================================================== */
 function initDeliverabilityCalculator() {
   const checkItems = document.querySelectorAll('.calc-checklist .check-item');
@@ -185,20 +355,18 @@ function initDeliverabilityCalculator() {
       }
     });
 
-    // Clamp score
     totalScore = Math.min(100, Math.max(0, totalScore));
 
     if (gaugeVal) gaugeVal.textContent = `${totalScore}%`;
 
-    // Color & Degree
-    let strokeColor = '#10B981'; // Emerald
-    let ratingLabel = 'Excellent (พร้อมส่ง Inbox 99.8%)';
+    let strokeColor = '#10B981';
+    let ratingLabel = 'Excellent (พร้อมส่ง Inbox & Microsoft 365 99.8%)';
     if (totalScore < 60) {
-      strokeColor = '#EF4444'; // Red
-      ratingLabel = 'Critical (มีความเสี่ยงตก Junk/Spam สูง)';
+      strokeColor = '#EF4444';
+      ratingLabel = 'Critical (มีความเสี่ยงโดน Defender กักกันหรือตก Junk)';
     } else if (totalScore < 85) {
-      strokeColor = '#F59E0B'; // Amber
-      ratingLabel = 'Moderate (ควรปรับปรุง Header & Auth)';
+      strokeColor = '#F59E0B';
+      ratingLabel = 'Moderate (ควรปรับปรุง Header & Zero-Credential)';
     }
 
     if (gaugeCircle) {
@@ -213,7 +381,7 @@ function initDeliverabilityCalculator() {
 
     if (adviceList) {
       if (pendingAdvices.length === 0) {
-        adviceList.innerHTML = `<li style="color:#10B981;">ผ่านเกณฑ์มาตรฐานทั้งหมด ระบบพร้อมใช้งานอย่างสมบูรณ์แบบ</li>`;
+        adviceList.innerHTML = `<li style="color:#10B981;">ผ่านเกณฑ์มาตรฐานทั้งหมด ทั้ง SPF/DKIM, RFC 2047, และ Defender Anti-Phishing</li>`;
       } else {
         adviceList.innerHTML = pendingAdvices.map(a => `<li>${a}</li>`).join('');
       }
@@ -231,7 +399,7 @@ function initDeliverabilityCalculator() {
 }
 
 /* ==========================================================================
-   Tool 4: Dynamic Code Generator
+   Tool 5: Dynamic Code Generator (Native, Serverless, Nodemailer, Python)
    ========================================================================== */
 function initCodeGenerator() {
   const hostInput = document.getElementById('gen-host');
@@ -242,6 +410,7 @@ function initCodeGenerator() {
   const toInput = document.getElementById('gen-to');
 
   const nodeCodeEl = document.getElementById('code-node-native');
+  const serverlessCodeEl = document.getElementById('code-serverless');
   const nodemailerCodeEl = document.getElementById('code-nodemailer');
   const pythonCodeEl = document.getElementById('code-python');
 
@@ -251,7 +420,7 @@ function initCodeGenerator() {
     const user = userInput ? userInput.value.trim() : 'your-email@gmail.com';
     const pass = passInput ? passInput.value.trim() : 'your-16-char-app-password';
     const from = fromInput ? fromInput.value.trim() : 'your-email@gmail.com';
-    const to = toInput ? toInput.value.trim() : 'recipient@domain.com';
+    const to = toInput ? toInput.value.trim() : 'somchai@company.com';
 
     if (nodeCodeEl) {
       nodeCodeEl.textContent = 
@@ -264,11 +433,49 @@ await sendEmail({
   fromEmail: '${from}',
   fromName: 'ระบบแจ้งเตือนอัตโนมัติ',
   toEmail: '${to}',
-  subject: 'รายงานประจำวัน (Daily Status Report)',
-  textContent: 'สวัสดีครับ นี่คืออีเมล Plaintext มาตรฐาน RFC 5322',
-  htmlContent: '<h1 style="color:#0078D4;">สวัสดีครับ</h1><p>เนื้อหาอีเมลแบบ HTML</p>'
+  subject: 'แจ้งข้อมูลเปิดสิทธิ์เข้าใช้งานระบบ',
+  textContent: 'สวัสดีครับ ผู้ดูแลระบบได้เปิดสิทธิ์เข้าใช้งานระบบสำหรับคุณเรียบร้อยแล้ว',
+  htmlContent: '<h2 style="color:#2563EB;">แจ้งเปิดสิทธิ์บัญชีผู้ใช้</h2><p>ผู้ดูแลระบบได้สร้างบัญชีสำหรับคุณแล้ว</p>'
 });
 console.log('Email delivered successfully!');`;
+    }
+
+    if (serverlessCodeEl) {
+      serverlessCodeEl.textContent = 
+`// api/send-email.js (Vercel Serverless Function with Dynamic DB Config)
+import { createClient } from '@supabase/supabase-js';
+import { sendEmail } from '../lib/smtp-native.js';
+
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  try {
+    // 1. Fetch Dynamic SMTP Config & Secrets from Database (Real-time updates without redeploy)
+    const { data: config } = await supabase.from('system_settings').select('value').eq('key', 'smtp_config').single();
+    const { data: secret } = await supabase.from('system_secrets').select('value').eq('key', 'smtp_password').single();
+
+    const { toEmail, subject, textContent, htmlContent } = req.body;
+
+    // 2. Dispatch email via Native TLS Gmail SMTP with Clean EOP Headers
+    await sendEmail({
+      user: config.value.user,
+      pass: secret.value.password,
+      fromEmail: config.value.from_email,
+      fromName: config.value.from_name,
+      toEmail,
+      subject,
+      textContent,
+      htmlContent
+    });
+
+    return res.status(200).json({ success: true, message: 'Delivered to corporate mailbox' });
+  } catch (err) {
+    console.error('SMTP Dispatch Failed:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+}`;
     }
 
     if (nodemailerCodeEl) {
@@ -285,12 +492,17 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Send with Microsoft Defender & EOP compliant headers
 await transporter.sendMail({
-  from: '"ระบบแจ้งเตือน" <${from}>',
+  from: '"ระบบแจ้งเตือนองค์กร" <${from}>',
   to: '${to}',
-  subject: 'ทดสอบส่งผ่าน Nodemailer',
-  text: 'ข้อความ Plain Text',
-  html: '<b>ข้อความ HTML</b>',
+  replyTo: '${from}',
+  headers: {
+    'Content-Language': 'th',
+  },
+  subject: 'แจ้งข้อมูลบัญชีผู้ใช้งานระบบ',
+  text: 'ผู้ดูแลระบบได้สร้างและเปิดสิทธิ์การใช้งานสำหรับคุณเรียบร้อยแล้ว',
+  html: '<h2>แจ้งข้อมูลบัญชีผู้ใช้งานระบบ</h2><p>กรุณาเข้าสู่ระบบผ่านลิงก์ขององค์กร</p>',
 });`;
     }
 
@@ -302,17 +514,19 @@ from email.mime.text import MIMEText
 from email.header import Header
 
 msg = MIMEMultipart('alternative')
-msg['Subject'] = Header('รายงานประจำวัน', 'utf-8')
+msg['Subject'] = Header('แจ้งข้อมูลบัญชีผู้ใช้งานระบบ', 'utf-8')
 msg['From'] = f'{Header("ระบบแจ้งเตือน", "utf-8").encode()} <${from}>'
 msg['To'] = '${to}'
+msg['Reply-To'] = '${from}'
+msg['Content-Language'] = 'th'
 
-msg.attach(MIMEText('Plaintext version', 'plain', 'utf-8'))
-msg.attach(MIMEText('<h1>HTML version</h1>', 'html', 'utf-8'))
+msg.attach(MIMEText('ผู้ดูแลระบบได้สร้างและเปิดสิทธิ์การใช้งานสำหรับคุณแล้ว', 'plain', 'utf-8'))
+msg.attach(MIMEText('<h2>แจ้งข้อมูลบัญชีผู้ใช้งานระบบ</h2>', 'html', 'utf-8'))
 
 with smtplib.SMTP_SSL('${host}', ${port}) as server:
     server.login('${user}', '${pass}')
     server.sendmail('${from}', ['${to}'], msg.as_string())
-    print("Sent successfully")`;
+    print("Sent successfully to corporate mailbox")`;
     }
   }
 
