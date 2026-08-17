@@ -12,6 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
   initCodeGenerator();
   initClipboardButtons();
   initAcidSquares();
+  initStrands();
+  initSpotlightCards();
+  initTiltedCards();
+  initMagneticButtons();
+  initDecryptedText();
+  initScrollReveal();
 });
 
 /* ==========================================================================
@@ -88,42 +94,42 @@ function encodeRFC2047(str) {
 function initRFC2047Encoder() {
   const nameInput = document.getElementById('rfc-sender-name');
   const emailInput = document.getElementById('rfc-sender-email');
+  const senderNameInput = document.getElementById('rfc-sender-name');
+  const senderEmailInput = document.getElementById('rfc-sender-email');
   const subjectInput = document.getElementById('rfc-subject');
   
-  const outputRaw = document.getElementById('rfc-output-raw');
-  const outputHeaders = document.getElementById('rfc-output-headers');
+  const outputRawEl = document.getElementById('rfc-output-raw');
+  const outputHeadersEl = document.getElementById('rfc-output-headers');
 
   function update() {
-    const senderName = nameInput ? nameInput.value.trim() : 'ระบบแจ้งเตือนอัตโนมัติ';
-    const senderEmail = emailInput ? emailInput.value.trim() : 'mailer@yourdomain.com';
-    const subject = subjectInput ? subjectInput.value.trim() : 'รายงานสรุปผลประจำวัน (Daily Summary)';
+    const senderName = senderNameInput ? senderNameInput.value.trim() : 'ระบบแจ้งเตือนอัตโนมัติ';
+    const senderEmail = senderEmailInput ? senderEmailInput.value.trim() : 'mailer@yourdomain.com';
+    const subject = subjectInput ? subjectInput.value.trim() : 'แจ้งข้อมูลบัญชีผู้ใช้งานระบบ (System Account Notification)';
 
-    const encodedName = encodeRFC2047(senderName);
     const encodedSubject = encodeRFC2047(subject);
+    const encodedSenderName = encodeRFC2047(senderName);
 
-    if (outputRaw) {
-      outputRaw.textContent = `Subject: ${encodedSubject}`;
-    }
+    const headers = [
+      `From: ${encodedSenderName} <${senderEmail}>`,
+      `Subject: ${encodedSubject}`,
+      `Reply-To: ${senderEmail}`,
+      `Content-Language: th`,
+      `MIME-Version: 1.0`,
+      `Content-Type: multipart/alternative; boundary="----=_Part_01"`
+    ].join('\n');
 
-    if (outputHeaders) {
-      outputHeaders.textContent = 
-`From: ${encodedName} <${senderEmail}>
-Subject: ${encodedSubject}
-Reply-To: ${senderEmail}
-Content-Language: th
-MIME-Version: 1.0
-Content-Type: multipart/alternative; boundary="----=_Part_01"`;
-    }
+    if (outputHeadersEl) outputHeadersEl.textContent = headers;
+    if (outputRawEl) outputRawEl.textContent = `Subject: ${encodedSubject}`;
   }
 
-  if (nameInput) nameInput.addEventListener('input', update);
-  if (emailInput) emailInput.addEventListener('input', update);
+  if (senderNameInput) senderNameInput.addEventListener('input', update);
+  if (senderEmailInput) senderEmailInput.addEventListener('input', update);
   if (subjectInput) subjectInput.addEventListener('input', update);
   update();
 }
 
 /* ==========================================================================
-   Tool 2: Microsoft 365 Group & Enterprise Delivery Suite Generator
+   Tool 2: Microsoft 365 & Corporate Inboxes PowerShell Generator
    ========================================================================== */
 function initM365Generator() {
   const groupTypeSelect = document.getElementById('m365-mode-select');
@@ -135,8 +141,8 @@ function initM365Generator() {
 
   function update() {
     const mode = groupTypeSelect ? groupTypeSelect.value : 'unified';
-    const email = groupEmailInput && groupEmailInput.value.trim() ? groupEmailInput.value.trim() : 'devops-alerts@company.com';
-    const bypassSender = bypassSenderInput && bypassSenderInput.value.trim() ? bypassSenderInput.value.trim() : 'stockflow.noreply.app@gmail.com';
+    const email = groupEmailInput && groupEmailInput.value.trim() ? groupEmailInput.value.trim() : 'devops-alerts@yourcompany.com';
+    const bypassSender = bypassSenderInput && bypassSenderInput.value.trim() ? bypassSenderInput.value.trim() : 'app.noreply.mailer@gmail.com';
     const allowExternal = optExternal ? optExternal.checked : true;
     const autoSubscribe = optAutoSub ? optAutoSub.checked : true;
 
@@ -229,12 +235,12 @@ function initZeroCredentialTemplate() {
   const templateCodeEl = document.getElementById('template-html-code');
 
   function update() {
-    const sysName = sysNameInput ? sysNameInput.value.trim() || 'StockFlow Management System' : 'StockFlow Management System';
+    const sysName = sysNameInput ? sysNameInput.value.trim() || 'Enterprise Notification System' : 'Enterprise Notification System';
     const recipientName = recipientNameInput ? recipientNameInput.value.trim() || 'สมชาย ใจดี' : 'สมชาย ใจดี';
     const recipientEmail = recipientEmailInput ? recipientEmailInput.value.trim() || 'somchai@company.com' : 'somchai@company.com';
     const userRole = userRoleInput ? userRoleInput.value.trim() || 'Operator' : 'Operator';
     const department = departmentInput ? departmentInput.value.trim() || 'Warehouse Central 01' : 'Warehouse Central 01';
-    const loginUrl = loginUrlInput ? loginUrlInput.value.trim() || 'https://stock-flow.vercel.app' : 'https://stock-flow.vercel.app';
+    const loginUrl = loginUrlInput ? loginUrlInput.value.trim() || 'https://app.yourdomain.com' : 'https://app.yourdomain.com';
     const brandColor = brandColorInput ? brandColorInput.value || '#2563EB' : '#2563EB';
 
     // Update live preview
@@ -758,3 +764,264 @@ async function initAcidSquares() {
     console.warn('AcidSquares WebGL initialization skipped (fallback to CSS atmosphere):', err);
   }
 }
+
+/* ==========================================================================
+   React Bits Component: Strands WebGL 2 Shader (Ribbon Light Waves)
+   ========================================================================== */
+async function initStrands() {
+  const container = document.getElementById('strands-architecture-bg');
+  if (!container) return;
+
+  try {
+    const { Renderer, Program, Mesh, Triangle } = await import('https://cdn.jsdelivr.net/npm/ogl@1.0.11/dist/ogl.mjs');
+
+    const renderer = new Renderer({
+      webgl: 2,
+      alpha: true,
+      premultipliedAlpha: true,
+      antialias: false,
+      dpr: Math.min(window.devicePixelRatio || 1, 2)
+    });
+
+    const gl = renderer.gl;
+    gl.clearColor(0, 0, 0, 0);
+    const canvas = gl.canvas;
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.display = 'block';
+    container.appendChild(canvas);
+
+    const vertex = `#version 300 es
+    in vec2 position;
+    void main() {
+      gl_Position = vec4(position, 0.0, 1.0);
+    }`;
+
+    const fragment = `#version 300 es
+    precision highp float;
+    uniform float uTime;
+    uniform vec2 uResolution;
+    uniform float uSpeed;
+    uniform float uAmplitude;
+    uniform float uWaviness;
+    uniform float uThickness;
+    uniform float uGlow;
+    uniform float uOpacity;
+    out vec4 fragColor;
+
+    const float PI = 3.14159265;
+
+    vec3 palette(float t) {
+      return 0.5 + 0.5 * cos(2.0 * PI * (t + vec3(0.00, 0.33, 0.67)));
+    }
+
+    void main() {
+      vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
+      float env = pow(max(cos(uv.x * PI * 1.15), 0.0), 1.2);
+      vec3 col = vec3(0.0);
+
+      for (int i = 0; i < 7; i++) {
+        float fi = float(i);
+        float freq = (2.2 + fi * 0.35) * uWaviness;
+        float spd = 1.2 + fi * 0.7;
+        float tt = uTime * uSpeed;
+        float w = sin(uv.x * freq + tt * spd + fi * 1.6) * 0.5 + sin(uv.x * freq * 1.2 - tt * spd * 0.8) * 0.3;
+        float y = w * env * uAmplitude;
+        float d = abs(uv.y - y);
+        float thick = (0.002 + 0.025) * (0.4 + env) * uThickness;
+        float g = thick / (d + thick * 0.45);
+        g = g * g;
+        float h = fi / 7.0 + uv.x * 0.25 + uTime * 0.04;
+        col += palette(h) * g * env;
+      }
+
+      col = 1.0 - exp(-col * uGlow);
+      float lum = max(max(col.r, col.g), col.b);
+      float alpha = clamp(lum, 0.0, 1.0) * uOpacity;
+      fragColor = vec4(col * uOpacity, alpha);
+    }`;
+
+    const geometry = new Triangle(gl);
+    const program = new Program(gl, {
+      vertex,
+      fragment,
+      uniforms: {
+        uTime: { value: 0 },
+        uResolution: { value: new Float32Array([1, 1]) },
+        uSpeed: { value: 0.5 },
+        uAmplitude: { value: 0.28 },
+        uWaviness: { value: 1.0 },
+        uThickness: { value: 0.9 },
+        uGlow: { value: 1.3 },
+        uOpacity: { value: 0.6 }
+      }
+    });
+
+    const mesh = new Mesh(gl, { geometry, program });
+
+    const resize = () => {
+      const rect = container.getBoundingClientRect();
+      const w = Math.max(1, Math.floor(rect.width));
+      const h = Math.max(1, Math.floor(rect.height));
+      renderer.setSize(w, h);
+      const res = program.uniforms.uResolution.value;
+      res[0] = gl.drawingBufferWidth;
+      res[1] = gl.drawingBufferHeight;
+    };
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    const t0 = performance.now();
+    const animate = t => {
+      program.uniforms.uTime.value = (t - t0) * 0.001;
+      renderer.render({ scene: mesh });
+      requestAnimationFrame(animate);
+    };
+
+    requestAnimationFrame(animate);
+  } catch (err) {
+    console.warn('Strands WebGL initialization skipped:', err);
+  }
+}
+
+/* ==========================================================================
+   React Bits Component: SpotlightCard (Cursor Spotlight Glow Tracking)
+   ========================================================================== */
+function initSpotlightCards() {
+  const cards = document.querySelectorAll('.spotlight-card');
+  cards.forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      card.style.setProperty('--mouse-x', `${x}px`);
+      card.style.setProperty('--mouse-y', `${y}px`);
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.setProperty('--mouse-x', `-1000px`);
+      card.style.setProperty('--mouse-y', `-1000px`);
+    });
+  });
+}
+
+/* ==========================================================================
+   React Bits Component: TiltedCard (3D Interactive Perspective Tilt)
+   ========================================================================== */
+function initTiltedCards() {
+  const cards = document.querySelectorAll('.tilted-card');
+  cards.forEach(card => {
+    let bounds;
+    function rotateToMouse(e) {
+      bounds = card.getBoundingClientRect();
+      const mouseX = e.clientX;
+      const mouseY = e.clientY;
+      const leftX = mouseX - bounds.x;
+      const topY = mouseY - bounds.y;
+      const center = {
+        x: leftX - bounds.width / 2,
+        y: topY - bounds.height / 2
+      };
+      
+      const rotateX = (-center.y / (bounds.height / 2)) * 6;
+      const rotateY = (center.x / (bounds.width / 2)) * 6;
+
+      card.style.transform = `
+        perspective(1000px)
+        scale3d(1.015, 1.015, 1.015)
+        rotateX(${rotateX.toFixed(2)}deg)
+        rotateY(${rotateY.toFixed(2)}deg)
+      `;
+    }
+
+    card.addEventListener('mouseenter', () => {
+      bounds = card.getBoundingClientRect();
+      card.style.transition = 'transform 0.1s ease-out';
+      document.addEventListener('mousemove', rotateToMouse);
+    });
+
+    card.addEventListener('mouseleave', () => {
+      document.removeEventListener('mousemove', rotateToMouse);
+      card.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+      card.style.transform = '';
+    });
+  });
+}
+
+/* ==========================================================================
+   React Bits Component: MagnetButton (Elastic Proximity Physics)
+   ========================================================================== */
+function initMagneticButtons() {
+  const btns = document.querySelectorAll('.btn-magnet, .btn-primary');
+  btns.forEach(btn => {
+    btn.addEventListener('mousemove', e => {
+      const rect = btn.getBoundingClientRect();
+      const x = e.clientX - (rect.left + rect.width / 2);
+      const y = e.clientY - (rect.top + rect.height / 2);
+      btn.style.transform = `translate(${x * 0.22}px, ${y * 0.22}px)`;
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.transform = 'translate(0px, 0px)';
+    });
+  });
+}
+
+/* ==========================================================================
+   React Bits Component: DecryptedText (Cyber Scramble Decoder Animation)
+   ========================================================================== */
+function initDecryptedText() {
+  const elements = document.querySelectorAll('[data-decrypted-text]');
+  const chars = '0123456789ABCDEF!<>-_\\/[]{}—=+*^?#';
+  
+  elements.forEach(el => {
+    const originalText = el.getAttribute('data-decrypted-text') || el.textContent;
+    let isDecrypted = false;
+
+    function decrypt() {
+      if (isDecrypted) return;
+      isDecrypted = true;
+      let iteration = 0;
+      const interval = setInterval(() => {
+        el.textContent = originalText
+          .split('')
+          .map((char, index) => {
+            if (char === ' ' || char === '\n') return char;
+            if (index < iteration) return originalText[index];
+            return chars[Math.floor(Math.random() * chars.length)];
+          })
+          .join('');
+
+        if (iteration >= originalText.length) {
+          clearInterval(interval);
+          isDecrypted = false;
+        }
+        iteration += 1 / 1.5;
+      }, 25);
+    }
+
+    el.addEventListener('mouseenter', decrypt);
+  });
+}
+
+/* ==========================================================================
+   React Bits Component: ScrollReveal (Smooth Staggered Intersection Observer)
+   ========================================================================== */
+function initScrollReveal() {
+  const revealElements = document.querySelectorAll('.reveal-on-scroll');
+  if (!('IntersectionObserver' in window)) {
+    revealElements.forEach(el => el.classList.add('reveal-visible'));
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries, obs) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('reveal-visible');
+        obs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  revealElements.forEach(el => observer.observe(el));
+}
+

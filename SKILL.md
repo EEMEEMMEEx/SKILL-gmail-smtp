@@ -34,7 +34,7 @@ description: >-
 
 ## 2. Enterprise Routing for Microsoft 365 & Corporate Inboxes
 
-เมื่อส่งอีเมลจาก Gmail SMTP (`@gmail.com`) ไปยังอีเมลองค์กรหรือ Microsoft 365 (เช่น `@forth.co.th` หรือ `@company.com`) ต้องปฏิบัติตามหลักความปลอดภัยระดับ Enterprise ดังนี้:
+เมื่อส่งอีเมลจาก Gmail SMTP (`@gmail.com`) ไปยังอีเมลองค์กรหรือ Microsoft 365 (เช่น `@yourdomain.com` หรือ `@company.com`) ต้องปฏิบัติตามหลักความปลอดภัยระดับ Enterprise ดังนี้:
 
 ### 2.1 กฎเหล็กป้องกัน Defender ตรวจจับเป็น High-Confidence Phishing (SCL 9)
 1. ❌ **ห้ามระบุ Plaintext Password หรือคำล่อแหลมในเนื้อหาอีเมลเด็ดขาด:**

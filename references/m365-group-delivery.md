@@ -1,6 +1,6 @@
 # Microsoft 365 Enterprise & Corporate Inbox Delivery Guide (Exchange Online Protection & Defender)
 
-เอกสารคู่มือเชิงลึกสำหรับการแก้ปัญหาการส่งอีเมลเข้า Microsoft 365 (M365) Corporate Inboxes (เช่น `@forth.co.th`), Unified Groups, Distribution Lists และการรับมือกับระบบความปลอดภัย Microsoft Defender for Office 365
+เอกสารคู่มือเชิงลึกสำหรับการแก้ปัญหาการส่งอีเมลเข้า Microsoft 365 (M365) Corporate Inboxes (เช่น `@yourdomain.com`, `@company.com`), Unified Groups, Distribution Lists และการรับมือกับระบบความปลอดภัย Microsoft Defender for Office 365
 
 ---
 
@@ -12,7 +12,7 @@
 * **พฤติกรรม:** อีเมลส่งออกจาก Gmail SMTP สำเร็จ (ขึ้นใน Gmail Sent) แต่ **ไม่ปรากฏใน Inbox หรือ Junk ของผู้รับใน Outlook** เลย
 * **กลไกการทำงานของ Defender:**
   - เมื่อผู้ส่งเป็น Free Email หรือ Third-party SMTP (`@gmail.com`) ส่งเข้าสู่โดเมนองค์กร
-  - **หากตรวจพบข้อความระบุรหัสผ่าน (Password)** เช่น `รหัสผ่านตั้งต้น (Initial Access)`, `รหัสผ่านชั่วคราว: F0rth2026@...` พร้อมกับลิงก์เข้าสู่ระบบ (`Log in / Sign in`) ที่ชี้ไปยังโดเมนภายนอก (`github.io`, `vercel.app`)
+  - **หากตรวจพบข้อความระบุรหัสผ่าน (Password)** เช่น `รหัสผ่านตั้งต้น (Initial Access)`, `รหัสผ่านชั่วคราว: ...` พร้อมกับลิงก์เข้าสู่ระบบ (`Log in / Sign in`) ที่ชี้ไปยังโดเมนภายนอก
   - Defender จะตีตราอีเมลฉบับนั้นเป็น **High-Confidence Phishing (Spam Confidence Level: SCL 9)**
   - นโยบายความปลอดภัยของ Microsoft 365 สำหรับ Phishing คือการนำเข้า **Admin Quarantine โดยตรง** ทำให้ผู้รับไม่เห็นอีเมลแม้แต่ใน Junk Mail!
 * **แนวทางแก้ไข:** ถอดการส่งรหัสผ่านในเนื้อหาอีเมลออกทั้งหมด เปลี่ยนเป็น **Clean Administrative Notification** แจ้งข้อมูลบัญชีและปุ่มเข้าใช้งานเท่านั้น
@@ -45,16 +45,16 @@
 <!-- ปลอดภัย 100% ผ่านตัวกรอง Defender / EOP -->
 <table role="presentation" width="100%" style="max-width:600px; background-color:#ffffff; font-family:'Sarabun', 'Noto Sans Thai', Arial, sans-serif;">
   <tr><td style="padding:24px;">
-    <h2>แจ้งข้อมูลบัญชีผู้ใช้งานระบบ StockFlow</h2>
+    <h2>แจ้งข้อมูลบัญชีผู้ใช้งานระบบ (Enterprise System Notification)</h2>
     <p>เรียน คุณ สมชาย ใจดี,</p>
     <p>ผู้ดูแลระบบได้สร้างและเปิดสิทธิ์การใช้งานสำหรับคุณเรียบร้อยแล้ว</p>
     <table style="background-color:#f8fafc; border:1px solid #e2e8f0; width:100%; padding:12px;">
       <tr><td>ชื่อ-สกุล:</td><td>สมชาย ใจดี</td></tr>
-      <tr><td>อีเมล:</td><td>somchai@forth.co.th</td></tr>
+      <tr><td>อีเมล:</td><td>somchai@company.com</td></tr>
       <tr><td>บทบาท:</td><td>Operator</td></tr>
     </table>
     <div style="text-align:center; margin-top:20px;">
-      <a href="https://stock-flow.vercel.app" style="background-color:#2563eb; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px;">เข้าสู่ระบบ</a>
+      <a href="https://app.yourdomain.com" style="background-color:#2563eb; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px;">เข้าสู่ระบบเพื่อเริ่มใช้งาน</a>
     </div>
   </td></tr>
 </table>
@@ -64,10 +64,10 @@
 ```http
 Date: Mon, 17 Aug 2026 20:30:00 +0700
 Message-ID: <uuid@smtp.gmail.com>
-From: "StockFlow Notification" <stockflow.noreply.app@gmail.com>
-To: recipient@forth.co.th
+From: "Enterprise Notification" <app.noreply.mailer@gmail.com>
+To: recipient@company.com
 Subject: =?UTF-8?B?...?=
-Reply-To: stockflow.noreply.app@gmail.com
+Reply-To: app.noreply.mailer@gmail.com
 Content-Language: th
 MIME-Version: 1.0
 Content-Type: multipart/alternative; boundary="----=_Part_..."
@@ -101,7 +101,8 @@ Get-UnifiedGroup -Identity "group-email@yourdomain.com" | Select-Object DisplayN
 หากต้องการให้ M365 ไว้วางใจอีเมลจากระบบแจ้งเตือนเสมอ:
 1. ใน EAC ไปที่ **Mail flow** → **Rules** → **Add a rule**
 2. ตั้งชื่อ: `Bypass Spam for App Notifications`
-3. **Apply this rule if:** Sender is `stockflow.noreply.app@gmail.com`
+3. **Apply this rule if:** Sender is `app.noreply.mailer@gmail.com`
 4. **Do the following:** Set the spam confidence level (SCL) to: **Bypass spam filtering (-1)**
 5. คลิก **Save** และเปิดใช้งาน (Enable) Rule
+
 

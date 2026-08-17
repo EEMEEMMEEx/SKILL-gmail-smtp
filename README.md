@@ -97,7 +97,7 @@ SMTP_PASS=abcdefghijklmnop
 
 ## <img src="./assets/icons/building.svg" width="20" height="20" align="absmiddle" /> การแก้ไขปัญหาและการส่งเข้า Microsoft 365 & Corporate Inboxes
 
-เมื่อส่งอีเมลจาก Gmail SMTP (`@gmail.com`) ไปยังโดเมนองค์กรหรือ Microsoft 365 (เช่น `@forth.co.th`, `@company.com` หรือ M365 Groups) ต้องปฏิบัติตามมาตรฐานระดับ Enterprise ดังนี้:
+เมื่อส่งอีเมลจาก Gmail SMTP (`@gmail.com`) ไปยังโดเมนองค์กรหรือ Microsoft 365 (เช่น `@yourdomain.com`, `@company.com` หรือ M365 Groups) ต้องปฏิบัติตามมาตรฐานระดับ Enterprise ดังนี้:
 
 ### 1. กฎเหล็กป้องกัน Defender ตรวจจับเป็น High-Confidence Phishing (SCL 9 Quarantine)
 * **พฤติกรรมของ Defender for Office 365 (EOP):** เมื่อได้รับอีเมลจากผู้ส่งภายนอก (`@gmail.com`) ที่มี Plaintext Password, รหัสผ่านตั้งต้น (`Initial Access`), หรือคำว่า `รหัสผ่านชั่วคราว` คู่กับลิงก์เข้าสู่ระบบ (`Log in / Sign in`) บนโดเมนภายนอก ระบบจะระบุว่าเป็นการโจมตีประเภท **Credential Harvesting / Phishing Attack**
@@ -108,7 +108,7 @@ SMTP_PASS=abcdefghijklmnop
 <!-- ตัวอย่าง Clean Administrative Notification Template ปลอดภัย 100% -->
 <table role="presentation" width="100%" style="max-width:580px; background-color:#ffffff; font-family:'Sarabun', Arial, sans-serif;">
   <tr><td style="padding:24px;">
-    <h2>แจ้งข้อมูลบัญชีผู้ใช้งานระบบ StockFlow</h2>
+    <h2>แจ้งข้อมูลบัญชีผู้ใช้งานระบบ (Enterprise System Notification)</h2>
     <p>เรียน คุณ สมชาย ใจดี,</p>
     <p>ผู้ดูแลระบบได้สร้างและเปิดสิทธิ์การใช้งานสำหรับบัญชีของคุณเรียบร้อยแล้ว</p>
     <table style="background-color:#f8fafc; border:1px solid #e2e8f0; width:100%; padding:12px; margin:16px 0;">
@@ -117,7 +117,7 @@ SMTP_PASS=abcdefghijklmnop
       <tr><td>บทบาท (Role):</td><td><strong>Operator</strong></td></tr>
     </table>
     <div style="text-align:center; margin:20px 0;">
-      <a href="https://stock-flow.vercel.app" style="background-color:#2563eb; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px;">เข้าสู่ระบบเพื่อเริ่มใช้งาน</a>
+      <a href="https://app.yourdomain.com" style="background-color:#2563eb; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px;">เข้าสู่ระบบเพื่อเริ่มใช้งาน</a>
     </div>
     <p style="font-size:0.8rem; color:#64748b; border-top:1px dashed #e2e8f0; padding-top:10px;">
       * เพื่อความปลอดภัยสูงสุด ระบบจะไม่มีการระบุรหัสผ่านในอีเมล โปรดใช้รหัสผ่านตั้งต้นขององค์กร
@@ -143,7 +143,7 @@ Set-DistributionGroup -Identity "dl-name@yourdomain.com" `
 
 # โหมด 3: Mail Flow Rule (Bypass Spam / ตั้งค่า SCL -1 สำหรับอีเมลระบบแจ้งเตือน)
 New-TransportRule -Name "Bypass Spam for App Notifications" `
-  -SenderAddressMatchesPatterns "stockflow.noreply.app@gmail.com" `
+  -SenderAddressMatchesPatterns "app.noreply.mailer@gmail.com" `
   -SetSCL -1 `
   -State Enabled `
   -Comments "Allow external Gmail SMTP notifications without Defender quarantine"
@@ -164,7 +164,7 @@ New-TransportRule -Name "Bypass Spam for App Notifications" `
 เมื่อพัฒนา Web Application แบบ Hybrid (Frontend อยู่บน GitHub Pages หรือ Vercel และ Database อยู่บน Supabase):
 
 1. **Endpoint Auto-Routing (ป้องกัน 404 & Silent Auth Fallback):**
-   - Frontend ที่เป็น Single Page Application (SPA) บน GitHub Pages ต้องเรียก API ด้วย **Absolute Serverless URL** (เช่น `https://stock-flow.vercel.app/api/send-email`)
+   - Frontend ที่เป็น Single Page Application (SPA) บน GitHub Pages ต้องเรียก API ด้วย **Absolute Serverless URL** (เช่น `https://api.yourdomain.com/api/send-email`)
    - ป้องกันปัญหาการเรียก Relative Path `/api/send-email` บน Static Hosting แล้วเกิด HTTP 404 ซึ่งจะทำให้โค้ด Frontend ตกไปทำงานใน Third-party Auth Fallback (ส่งอีเมลรีเซ็ตรหัสผ่านภาษาอังกฤษออกมาแทน)
 2. **Dynamic Database Config Loading:**
    - API Serverless Dispatcher จะเชื่อมต่อไปยัง Supabase (`system_settings` และ `system_secrets`) เพื่อดึงค่า `smtp_config` และ `smtp_password` แบบ Real-time ทุกครั้งที่ส่ง
