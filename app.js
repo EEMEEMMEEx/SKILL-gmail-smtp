@@ -77,49 +77,130 @@ function initTabs() {
 /* ==========================================================================
    Tool 1: RFC 2047 Thai Header Live Encoder
    ========================================================================== */
-function encodeRFC2047(str) {
+/* RFC 2047 Section 2: an encoded-word must not exceed 75 characters. */
+const RFC_ENCODED_WORD_MAX = 75;
+/* RFC 5322 Section 2.1.1: header lines SHOULD stay under 78 characters. */
+const RFC_HEADER_LINE_MAX = 76;
+
+function utf8ToBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+function encodeRFC2047Word(str) {
+  return `=?UTF-8?B?${utf8ToBase64(str)}?=`;
+}
+
+/*
+ * Split one logical text run into RFC 2047 encoded-words of <=75 chars each.
+ * Whitespace between adjacent encoded-words is ignored on decode (RFC 2047
+ * Section 6.2), so chunks decode back-to-back and the text survives intact.
+ */
+function chunkEncodedText(str) {
+  const prefix = '=?UTF-8?B?';
+  const suffix = '?=';
+  const full = encodeRFC2047Word(str);
+  if (full.length <= RFC_ENCODED_WORD_MAX) return [full];
+  const payload = full.slice(prefix.length, -suffix.length);
+  const maxPayload = RFC_ENCODED_WORD_MAX - prefix.length - suffix.length;
+  const words = [];
+  for (let i = 0; i < payload.length; i += maxPayload) {
+    words.push(`${prefix}${payload.slice(i, i + maxPayload)}${suffix}`);
+  }
+  return words;
+}
+
+/*
+ * RFC 2047 compliant header-text encoder: keeps pure-ASCII runs readable and
+ * encodes only non-ASCII (Thai) runs into chunked encoded-words.
+ */
+function encodeRFC2047Text(str) {
   if (!str) return '';
-  if (/^[\x20-\x7E]*$/.test(str)) {
-    return str;
+  const tokens = str.match(/[\x00-\x7F]+|[^\x00-\x7F]+/g) || [str];
+  return tokens
+    .map(token => (/^[\x20-\x7E]*$/.test(token) ? token : chunkEncodedText(token).join(' ')))
+    .join(' ');
+}
+
+/*
+ * Fold a header line at word boundaries so every physical line stays under the
+ * RFC 5322 78-char recommendation. Continuation lines start with one space.
+ */
+function foldHeaderLine(label, value, limit = RFC_HEADER_LINE_MAX) {
+  const tokens = String(value).split(' ');
+  let current = label;
+  const lines = [];
+  for (const token of tokens) {
+    if (!token) continue;
+    if (current.length + 1 + token.length <= limit) {
+      current += (current === label ? '' : ' ') + token;
+    } else {
+      lines.push(current);
+      current = ` ${token}`;
+    }
   }
-  const utf8Bytes = new TextEncoder().encode(str);
-  let binaryStr = '';
-  for (let i = 0; i < utf8Bytes.length; i++) {
-    binaryStr += String.fromCharCode(utf8Bytes[i]);
-  }
-  const base64 = btoa(binaryStr);
-  return `=?UTF-8?B?${base64}?=`;
+  lines.push(current);
+  return lines.join('\r\n');
 }
 
 function initRFC2047Encoder() {
-  const nameInput = document.getElementById('rfc-sender-name');
-  const emailInput = document.getElementById('rfc-sender-email');
   const senderNameInput = document.getElementById('rfc-sender-name');
   const senderEmailInput = document.getElementById('rfc-sender-email');
   const subjectInput = document.getElementById('rfc-subject');
-  
+
   const outputRawEl = document.getElementById('rfc-output-raw');
   const outputHeadersEl = document.getElementById('rfc-output-headers');
+  const outputPreviewEl = document.getElementById('rfc-output-preview');
+  const statusEl = document.getElementById('rfc-status');
 
   function update() {
     const senderName = senderNameInput ? senderNameInput.value.trim() : 'ระบบแจ้งเตือนอัตโนมัติ';
     const senderEmail = senderEmailInput ? senderEmailInput.value.trim() : 'mailer@yourdomain.com';
     const subject = subjectInput ? subjectInput.value.trim() : 'แจ้งข้อมูลบัญชีผู้ใช้งานระบบ (System Account Notification)';
 
-    const encodedSubject = encodeRFC2047(subject);
-    const encodedSenderName = encodeRFC2047(senderName);
+    const encodedSubject = encodeRFC2047Text(subject);
+    const encodedSenderName = encodeRFC2047Text(senderName);
+    const fromValue = senderName ? `${encodedSenderName} <${senderEmail}>` : senderEmail;
 
     const headers = [
-      `From: ${encodedSenderName} <${senderEmail}>`,
-      `Subject: ${encodedSubject}`,
+      foldHeaderLine('From: ', fromValue),
+      foldHeaderLine('Subject: ', encodedSubject),
       `Reply-To: ${senderEmail}`,
-      `Content-Language: th`,
-      `MIME-Version: 1.0`,
-      `Content-Type: multipart/alternative; boundary="----=_Part_01"`
-    ].join('\n');
+      'Content-Language: th',
+      'MIME-Version: 1.0',
+      'Content-Type: multipart/alternative; boundary="----=_Part_01"'
+    ].join('\r\n');
 
     if (outputHeadersEl) outputHeadersEl.textContent = headers;
     if (outputRawEl) outputRawEl.textContent = `Subject: ${encodedSubject}`;
+
+    // Recipient preview: exactly what a mail client shows after decoding.
+    if (outputPreviewEl) {
+      outputPreviewEl.textContent = [
+        `From: ${senderName ? `${senderName} <${senderEmail}>` : senderEmail}`,
+        `Subject: ${subject}`
+      ].join('\n');
+    }
+
+    if (statusEl) {
+      const headerLines = headers.split('\r\n');
+      const maxLineLen = Math.max(...headerLines.map(line => line.length));
+      const encodedWordCount = (headers.match(/\?=/g) || []).length;
+      const hasNonAscii = /[^\x20-\x7E]/.test(subject + senderName);
+      const compliant = maxLineLen <= 78;
+
+      statusEl.textContent = !hasNonAscii
+        ? `✓ ASCII only · no encoding needed · longest line ${maxLineLen}/78`
+        : compliant
+          ? `✓ RFC 2047/5322 OK · longest line ${maxLineLen}/78 · ${encodedWordCount} encoded-word${encodedWordCount === 1 ? '' : 's'}`
+          : `⚠ Longest line ${maxLineLen}/78 exceeds RFC 5322 limit`;
+      statusEl.classList.toggle('ok', compliant);
+      statusEl.classList.toggle('warn', !compliant);
+    }
   }
 
   if (senderNameInput) senderNameInput.addEventListener('input', update);

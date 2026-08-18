@@ -968,6 +968,34 @@ body {
   border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
+/* RFC 2047 Encoder compliance status pill */
+.rfc-status {
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.rfc-status.ok {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.rfc-status.warn {
+  background: rgba(245, 158, 11, 0.15);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* RFC encoder output boxes: preserve folded CRLF lines */
+#encoder .terminal-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .template-preview-container {
   background: #06090F;
   border: 1px solid rgba(255, 255, 255, 0.08);
