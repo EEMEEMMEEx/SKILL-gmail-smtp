@@ -117,7 +117,7 @@ const PIPELINE_STAGES = {
   7: {
     title: 'STAGE 07: Recipient Focused Inbox',
     status: 'Delivered',
-    desc: 'อีเมลเข้าสู่ Focused Inbox ของผู้รับ (watchara.m@forth.co.th) ทันที โดยไม่ตกไปอยู่ใน Junk Mail หรือ Admin Quarantine',
+    desc: 'อีเมลเข้าสู่ Focused Inbox ของผู้รับ (recipient@yourcompany.com) ทันที โดยไม่ตกไปอยู่ใน Junk Mail หรือ Admin Quarantine',
     tech: 'Message-ID: <xxxx@smtp.gmail.com> ──► Delivered to Focused Inbox (100% Verified)'
   }
 };
@@ -489,11 +489,11 @@ function initZeroCredentialTemplate() {
   function update() {
     const sysName = sysNameInput ? sysNameInput.value.trim() || 'StockFlow' : 'StockFlow';
     const brandColor = brandColorInput ? brandColorInput.value.trim() || '#2563EB' : '#2563EB';
-    const recipientName = recipientNameInput ? recipientNameInput.value.trim() || 'วัชระ มานะดี' : 'วัชระ มานะดี';
-    const recipientEmail = recipientEmailInput ? recipientEmailInput.value.trim() || 'watchara.m@forth.co.th' : 'watchara.m@forth.co.th';
+    const recipientName = recipientNameInput ? recipientNameInput.value.trim() || 'สมชาย ใจดี' : 'สมชาย ใจดี';
+    const recipientEmail = recipientEmailInput ? recipientEmailInput.value.trim() || 'somchai@yourcompany.com' : 'somchai@yourcompany.com';
     const refNo = refNoInput ? refNoInput.value.trim() || 'REQ-2026-008' : 'REQ-2026-008';
     const projectName = projectNameInput ? projectNameInput.value.trim() || 'โครงการติดตั้งระบบ' : 'โครงการติดตั้งระบบ';
-    const actionUrl = actionUrlInput ? actionUrlInput.value.trim() || 'https://stockflow.forth.co.th' : 'https://stockflow.forth.co.th';
+    const actionUrl = actionUrlInput ? actionUrlInput.value.trim() || 'https://app.yourdomain.com' : 'https://app.yourdomain.com';
 
     const tpl = EVENT_TEMPLATES[currentEventType] || EVENT_TEMPLATES.withdrawal_submitted;
 
@@ -766,7 +766,7 @@ function initCodeGenerator() {
     const user = userInput ? userInput.value.trim() || 'sender@gmail.com' : 'sender@gmail.com';
     const pass = passInput ? passInput.value.trim() || 'xxxx-xxxx-xxxx-xxxx' : 'xxxx-xxxx-xxxx-xxxx';
     const from = fromInput ? fromInput.value.trim() || 'sender@gmail.com' : 'sender@gmail.com';
-    const to = toInput ? toInput.value.trim() || 'watchara.m@forth.co.th' : 'watchara.m@forth.co.th';
+    const to = toInput ? toInput.value.trim() || 'recipient@yourcompany.com' : 'recipient@yourcompany.com';
 
     // 1. Node.js Native TLS
     if (preNodeNative) {

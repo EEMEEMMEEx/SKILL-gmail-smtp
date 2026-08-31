@@ -1,9 +1,9 @@
 # Changelog
 
-## [2026-09-01 00:58]
-- **Files Modified:** `.agents/skills/npx-skills/SKILL.md`, `~/.gemini/config/skills/npx-skills/SKILL.md`, `CHANGELOG.md`
-- **Changes:** สร้าง Skill ใหม่ **`npx-skills`** สำหรับติดตั้ง, Scaffold, จัดการ และแก้ไขปัญหา Agent Skills ผ่าน `npx` และ CLI Package Tools ทั้งในระดับ Workspace (`.agents/skills/`) และ Global Config (`~/.gemini/config/skills/`) ครอบคลุมคำสั่ง Non-interactive (`npx -y degit`), ขั้นตอนการตรวจสอบ Frontmatter และแนวทางแก้ปัญหา CLI Blocking
-- **Reason:** จัดทำรันบุ๊กมาตรฐานที่นำกลับมาใช้ซ้ำได้ สำหรับการติดตั้งและใช้งาน Agent Skills ผ่านเครื่องมือ CLI
+## [2026-09-01 01:01]
+- **Files Modified:** `landing-page/index.html`, `landing-page/app.js`, `README.md`, `CHANGELOG.md`
+- **Changes:** ลบและเปลี่ยนค่าอีเมล/ชื่อผู้รับส่วนบุคคลทั้งหมด (`watchara.m@forth.co.th`, `วัชระ มานะดี`, `https://stockflow.forth.co.th`) ในหน้า Landing Page และ README.md ให้เป็นค่ามาตรฐานสากล (`recipient@yourcompany.com`, `somchai@yourcompany.com`, `สมชาย ใจดี`, `https://app.yourdomain.com`)
+- **Reason:** รักษาความเป็นส่วนตัวและความปลอดภัยของข้อมูลตัวอย่าง (Data Privacy & Anonymization)
 
 ## [2026-09-01 00:50]
 - **Files Modified:** `landing-page/index.html`, `landing-page/styles.css`, `landing-page/app.js`, `CHANGELOG.md`

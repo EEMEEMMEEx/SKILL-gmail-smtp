@@ -143,7 +143,7 @@
    │  • Microsoft Defender for Office 365 (NLP Urgency & Phishing Lure Heuristics)
    ▼
 [ Recipient Focused Inbox ]
-   └─ watchara.m@forth.co.th (Delivery Verified: SCL 0-1)
+   └─ recipient@yourcompany.com (Delivery Verified: SCL 0-1)
 ```
 
 ---
