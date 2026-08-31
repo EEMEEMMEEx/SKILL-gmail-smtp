@@ -1,5 +1,32 @@
 # Changelog
 
+## [2026-09-01 00:50]
+- **Files Modified:** `landing-page/index.html`, `landing-page/styles.css`, `landing-page/app.js`, `CHANGELOG.md`
+- **Changes:** ปรับปรุง UX/UI ของ Landing Page Toolkit ขนานใหญ่:
+  1. **Hero Typography & Layout:** แก้ไขปัญหาการ Render กล่องสีฟ้าทับซ้อนของหัวข้อ Hero Title, ปรับปรุง Gradient ข้อความให้คมชัดสวยงาม และเพิ่ม Stats Cards แบบ Glassmorphism ที่มี Hover Physics
+  2. **Interactive Delivery Pipeline:** เพิ่มระบบจำลองผังการไหลของข้อมูล 7 ขั้นตอน (Interactive Flow Cards) พร้อมกล่อง Pipeline Inspector ตรวจสอบรายละเอียดทางเทคนิคแต่ละ Stage
+  3. **Preset Chips & Quick Actions:** เพิ่มปุ่มเลือกแม่แบบตัวอย่าง (Preset Chips) ในเครื่องมือ RFC 2047 Live Encoder และ M365 DBEB Simulator
+  4. **Template Sandbox & Responsive View:** เพิ่มปุ่มสลับมุมมอง Desktop (620px) และ Mobile (375px) พร้อมแม่แบบจำลอง 7 เหตุการณ์แจ้งเตือน (รวม Stock In, Reorder Alert, Withdrawal Rejected แบบ Amber Notice)
+  5. **Deliverability Score Gauge:** อัปเกรด SVG Radial Gauge แสดงผลคะแนนความพร้อม พร้อมคำแนะนำการปรับปรุงแบบ Real-time
+  6. **Troubleshooting Filter & 5-Language Code Gen:** เพิ่ม Filter Tabs แยกตามหมวดหมู่ปัญหา และเพิ่มตัวสร้างโค้ดสำหรับ Go (net/smtp) เพิ่มเติมจาก Node.js, Python และ Serverless
+  7. **Design System & Icon Policy:** ปรับใช้โทนสี Dark Slate Tech ที่มี Contrast สูง และใช้ไอคอน Scalable Inline SVG (ReactBits Standard) 100% ปราศจาก Unicode Emoji
+- **Reason:** ยกระดับประสบการณ์ใช้งาน (UX/UI) ให้สวยงาม พรีเมียม ตอบสนองรวดเร็ว และใช้งานได้จริงในการแก้ปัญหาการจัดส่งอีเมล
+
+## [2026-09-01 00:48]
+- **Files Modified:** `README.md`, `CHANGELOG.md`
+- **Changes:** เพิ่มหมวด **"การติดตั้งและการนำไปใช้งาน (Installation & Setup)"** ใน `README.md` ครอบคลุม 3 รูปแบบหลัก: (1) การติดตั้งเป็น AI Agent Skill (Workspace / Global Customization), (2) การติดตั้ง Dependencies (`nodemailer`, `dotenv`) พร้อมการตั้งค่า `.env` และ Vite Dev Proxy Middleware สำหรับ Web App/Backend, และ (3) การ Clone และเปิดใช้งาน Interactive Toolkit แบบ Zero-Build
+- **Reason:** จัดทำคู่มือแนะนำขั้นตอนการติดตั้งและนำ Skill ไปใช้งานอย่างเป็นระบบ รองรับทั้ง AI Agents และนักพัฒนาเว็บแอปพลิเคชัน
+
+## [2026-09-01 00:47]
+- **Files Modified:** `README.md`, `CHANGELOG.md`
+- **Changes:** อัปเดต `README.md` ให้เป็น Toolkit Guide ฉบับสมบูรณ์ ประกอบด้วย สถาปัตยกรรม Pipeline ระบบ, Troubleshooting Matrix, Anti-Spam NLP & Phishing Lure Heuristics, Shared Email Rendering Architecture & DB Auto-Upgrade, Zero-Credential Policy, Automated Verification Checklist, และรายละเอียด Interactive Toolkit ที่ขับเคลื่อนด้วย **ReactBits** (WebGL Shaders `AcidSquares`/`Strands` และ ReactBits Scalable SVG Icon System ปราศจาก Unicode Emoji)
+- **Reason:** ปรับปรุงเอกสารคู่มือโปรเจกต์ให้สอดคล้องกับ Incident Report และมาตรฐาน UI/Design System ล่าสุด
+
+## [2026-09-01 00:45]
+- **Files Modified:** `SKILL.md`, `CHANGELOG.md`
+- **Changes:** อัปเดต `SKILL.md` ให้ครอบคลุมข้อค้นพบเชิงลึกจาก `EMAIL_DELIVERY_COMPREHENSIVE_INCIDENT_REPORT.md` ได้แก่ การแยกระดับความล้มเหลวตาม Pipeline (Dev Proxy Middleware / Event Wiring / Role-based Recipient Resolution / Deduplication), กฎการป้องกัน Anti-Spam NLP & Heuristics (Alarmist Urgency Words / Phishing Lure Pattern / Preheader Spacing / RFC Header Alignment), สถาปัตยกรรม Shared Rendering & Database Template Auto-Upgrade/Reset, และขั้นตอน Automated Verification Checklist (Unit tests, Build, Focused Inbox verification)
+- **Reason:** นำ Best Practices, Root Causes และแนวทางปฏิบัติจาก Incident Report ฉบับสมบูรณ์มาใช้เป็น Runbook มาตรฐานสำหรับสืบสวนและแก้ปัญหาการส่งอีเมลในอนาคต
+
 ## [2026-08-31 23:00]
 - **Files Modified:** `SKILL.md`, `CHANGELOG.md`
 - **Changes:** Added explicit SMTP probe guidance, `550 5.7.x` policy handling, DBEB/header examples (`X-Priority`, `X-Entity-Ref-ID`, DSN), and corrected the email-client layout width guidance.

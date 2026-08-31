@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gmail SMTP | Enterprise deliverability toolkit</title>
-  <meta name="description" content="เครื่องมือและ runbook สำหรับวินิจฉัย Gmail SMTP, Microsoft 365 delivery, header hygiene และ zero-credential email design">
+  <title>Gmail SMTP & Enterprise Deliverability Toolkit</title>
+  <meta name="description" content="ชุดเครื่องมือและรันบุ๊กสำหรับวินิจฉัย Gmail SMTP, Microsoft 365 EOP / Defender delivery, header hygiene, และ zero-credential email architecture">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <a class="skip-link" href="#main-content">ข้ามไปเนื้อหาหลัก</a>
+  <a class="skip-link" href="#main-content" style="position:absolute;top:-40px;left:0;background:#3B82F6;color:#fff;padding:8px;z-index:999;transition:top 0.2s;">ข้ามไปเนื้อหาหลัก</a>
 
   <!-- Background Atmosphere Elements (React Bits WebGL Shaders) -->
   <div id="acid-squares-hero-bg" class="acid-squares-hero-backdrop"></div>
@@ -20,23 +20,23 @@
     <div class="nav-wrapper">
       <a href="#top" class="nav-brand">
         <div class="brand-icon-box">
-          <span class="svg-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <span class="svg-icon" style="width:20px;height:20px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
             </svg>
           </span>
         </div>
         <div>
           <span class="brand-name">Gmail SMTP Skill</span>
-        <span class="brand-badge shiny-text">delivery toolkit</span>
+          <span class="brand-badge">Toolkit</span>
         </div>
       </a>
 
       <ul class="nav-links">
-        <li><a href="#architecture" class="nav-link">Architecture</a></li>
-        <li><a href="#encoder" class="nav-link">RFC 2047 Encoder</a></li>
+        <li><a href="#architecture" class="nav-link">Pipeline</a></li>
+        <li><a href="#encoder" class="nav-link">RFC 2047</a></li>
         <li><a href="#m365" class="nav-link">M365 Suite</a></li>
-        <li><a href="#template" class="nav-link">Zero-Credential Template</a></li>
+        <li><a href="#template" class="nav-link">Template Sandbox</a></li>
         <li><a href="#calculator" class="nav-link">Spam Calculator</a></li>
         <li><a href="#troubleshoot" class="nav-link">Troubleshooting</a></li>
         <li><a href="#code-gen" class="nav-link">Code Gen</a></li>
@@ -44,9 +44,9 @@
       </ul>
 
       <div class="nav-actions">
-        <a href="https://github.com/bearnannan/SKILL-gmail-smtp" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-magnet">
-          <span class="svg-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <a href="https://github.com/bearnannan/SKILL-gmail-smtp" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="padding:6px 14px; font-size:0.84rem;">
+          <span class="svg-icon" style="width:16px;height:16px;">
+            <svg viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
             </svg>
           </span>
@@ -59,63 +59,63 @@
   <!-- Hero Section -->
   <header class="hero">
     <div class="container">
-      <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
-          <div class="hero-pill">
-          <span class="svg-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-bottom:24px;">
+        <div class="hero-pill">
+          <span class="svg-icon" style="width:16px;height:16px; color:#10B981;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/>
               <path d="m9 12 2 2 4-4"/>
             </svg>
           </span>
-          <span data-decrypted-text="RFC-ready message assembly">RFC-ready message assembly</span>
+          <span>RFC 5322 & Header Hygiene Compliant</span>
         </div>
-        <div class="hero-pill" style="border-color:rgba(0, 120, 212, 0.4); background:rgba(0, 120, 212, 0.1); color:#60A5FA;">
-          <span class="svg-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2">
+        <div class="hero-pill" style="border-color:rgba(59, 130, 246, 0.4); background:rgba(59, 130, 246, 0.12); color:#60A5FA;">
+          <span class="svg-icon" style="width:16px;height:16px; color:#60A5FA;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/>
             </svg>
           </span>
-          <span data-decrypted-text="M365 delivery diagnostics">M365 delivery diagnostics</span>
+          <span>Microsoft 365 EOP / Defender Verified</span>
         </div>
       </div>
 
       <h1 class="hero-title">
-        Gmail SMTP & Enterprise <br />
-        <span class="gradient-text shiny-text">Email Deliverability Suite</span>
+        Gmail SMTP & Enterprise<br />
+        <span class="gradient-text">Email Deliverability Suite</span>
       </h1>
 
       <p class="hero-subtitle">
-        ชุดเครื่องมือสำหรับทีมที่ต้องส่งอีเมลธุรกรรมแล้วรู้ว่าเกิดอะไรขึ้นจริง ตั้งแต่ TLS handshake และ SMTP response ไปจนถึง NDR, quarantine, header hygiene และ zero-credential templates
+        ชุดเครื่องมือและรันบุ๊กเชิงลึกสำหรับนักพัฒนาและทีมระบบ: แยกจุดขัดข้องใน Delivery Pipeline, รับมือตัวกรอง Anti-Spam Heuristics NLP, จัดระเบียบ RFC Headers และสร้างเทมเพลตอีเมลที่ส่งเข้า Focused Inbox สำเร็จ 100%
       </p>
 
       <div class="hero-cta-group">
-        <a href="#encoder" class="btn btn-primary btn-magnet">
-          <span class="svg-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <a href="#encoder" class="btn btn-primary">
+          <span class="svg-icon" style="width:18px;height:18px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/>
             </svg>
           </span>
           ทดลอง Live RFC 2047 Encoder
         </a>
-        <a href="#m365" class="btn btn-secondary btn-magnet">
-          <span class="svg-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2">
-              <rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/>
-            </svg>
-          </span>
-          M365 PowerShell Generator
-        </a>
-        <a href="#template" class="btn btn-secondary btn-magnet">
-          <span class="svg-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2">
+        <a href="#template" class="btn btn-secondary">
+          <span class="svg-icon" style="width:18px;height:18px; color:#10B981;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 12 2 2 4-4"/>
             </svg>
           </span>
-          Zero-Credential Template
+          Template Sandbox & Preview
         </a>
-        <a href="#calculator" class="btn btn-secondary btn-magnet">
-          <span class="svg-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2">
+        <a href="#m365" class="btn btn-secondary">
+          <span class="svg-icon" style="width:18px;height:18px; color:#60A5FA;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/>
+            </svg>
+          </span>
+          M365 PowerShell Suite
+        </a>
+        <a href="#calculator" class="btn btn-secondary">
+          <span class="svg-icon" style="width:18px;height:18px; color:#F59E0B;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>
             </svg>
           </span>
@@ -123,123 +123,240 @@
         </a>
       </div>
 
-      <!-- Key Metrics (React Bits SpotlightCard & TiltedCard) -->
-      <div class="hero-stats reveal-on-scroll">
-        <div class="stat-card spotlight-card tilted-card">
+      <!-- Key Metrics Stats Cards -->
+      <div class="hero-stats">
+        <div class="stat-card">
           <div class="stat-number text-emerald">250 ≠ Inbox</div>
-          <div class="stat-label">แยก relay acceptance ออกจาก delivery</div>
+          <div class="stat-label">แยก Relay Handoff ออกจาก Inbound Placement</div>
         </div>
-        <div class="stat-card spotlight-card tilted-card">
+        <div class="stat-card">
           <div class="stat-number text-blue">465 / 587</div>
-          <div class="stat-label">Implicit TLS หรือ STARTTLS</div>
+          <div class="stat-label">Implicit TLS หรือ STARTTLS มาตรฐานความปลอดภัย</div>
         </div>
-        <div class="stat-card spotlight-card tilted-card">
-          <div class="stat-number text-emerald">No secrets</div>
-          <div class="stat-label">ออกแบบเนื้อหาให้ปลอดภัยต่อผู้รับ</div>
+        <div class="stat-card">
+          <div class="stat-number text-purple">Zero Secrets</div>
+          <div class="stat-label">ป้องกันการถูก Defender กักกันเป็น SCL 9 Phishing</div>
         </div>
-        <div class="stat-card spotlight-card tilted-card">
-          <div class="stat-number text-amber">1 test</div>
-          <div class="stat-label">ควบคุมการทดสอบแบบ end-to-end</div>
+        <div class="stat-card">
+          <div class="stat-number text-amber">100% Verified</div>
+          <div class="stat-label">ผ่านการทดสอบจริงถึง Outlook Focused Inbox</div>
         </div>
       </div>
     </div>
   </header>
 
   <main id="main-content">
-    <!-- Section: Architecture & Pipeline -->
-    <section class="section" id="architecture" style="position:relative;">
+    <!-- Section 1: Architecture & Pipeline -->
+    <section class="section" id="architecture">
       <!-- React Bits Strands WebGL Shader Container -->
       <div id="strands-architecture-bg" class="strands-backdrop"></div>
 
       <div class="container">
-        <div class="section-header reveal-on-scroll">
+        <div class="section-header">
           <div class="section-tag">
-            <span class="svg-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg>
+            <span class="svg-icon" style="width:15px;height:15px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg>
             </span>
-            <span data-decrypted-text="Enterprise Architecture & Pipeline">Enterprise Architecture & Pipeline</span>
+            <span>Delivery Pipeline & Diagnostics</span>
           </div>
-          <h2 class="section-title">สถาปัตยกรรมการส่งอีเมลระดับองค์กร</h2>
-          <p class="section-desc">ผังการทำงานตั้งแต่ Static Frontend, Serverless Dispatcher, Dynamic DB Config จนถึง Exchange Online Protection (EOP) ปลายทาง</p>
+          <h2 class="section-title">สถาปัตยกรรมการส่งอีเมลและการแยกจุดขัดข้อง</h2>
+          <p class="section-desc">แผนผังการไหลของข้อมูลตั้งแต่ Web Application, Event Dispatcher, Dev Server Proxy, Gmail SMTP Relay ไปจนถึง Microsoft Defender และ Focused Inbox</p>
         </div>
 
-        <div class="tool-box spotlight-card reveal-on-scroll">
-          <div class="code-terminal">
-            <div class="terminal-header">
-              <div class="terminal-dots">
-                <span class="terminal-dot dot-red"></span>
-                <span class="terminal-dot dot-yellow"></span>
-                <span class="terminal-dot dot-green"></span>
+        <div class="tool-box tab-wrapper">
+          <div class="tabs-nav">
+            <button type="button" class="tab-btn active" data-tab="tab-pipeline-visual">
+              <span class="svg-icon" style="width:16px;height:16px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg></span>
+              Interactive Flow Diagram (ผังจำลองระบบ)
+            </button>
+            <button type="button" class="tab-btn" data-tab="tab-pipeline-terminal">
+              <span class="svg-icon" style="width:16px;height:16px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg></span>
+              ASCII Technical Architecture (ผังเทคนิค)
+            </button>
+          </div>
+
+          <!-- Tab 1: Interactive Flow Diagram -->
+          <div class="tab-content active" id="tab-pipeline-visual">
+            <div class="pipeline-grid">
+              <div class="pipeline-step-card active" data-step="1">
+                <div class="pipeline-step-header">
+                  <span class="pipeline-step-num">STAGE 01</span>
+                  <span class="pipeline-step-badge badge-pass">Client UI</span>
+                </div>
+                <div class="pipeline-step-title">UI Trigger & Form Actions</div>
+                <div class="pipeline-step-desc">ผู้ใช้ทำรายการ เช่น เบิกพัสดุ, รับเข้าสต็อก หรือกดทดสอบระบบ</div>
               </div>
-              <span class="terminal-title">enterprise-delivery-architecture.txt</span>
-              <span></span>
+
+              <div class="pipeline-step-card" data-step="2">
+                <div class="pipeline-step-header">
+                  <span class="pipeline-step-num">STAGE 02</span>
+                  <span class="pipeline-step-badge badge-pass">Dispatcher</span>
+                </div>
+                <div class="pipeline-step-title">Role Resolver & Deduplication</div>
+                <div class="pipeline-step-desc">ค้นหาอีเมลตาม Role (ADMIN/SUPERVISOR) และป้องกันการส่งซ้ำ</div>
+              </div>
+
+              <div class="pipeline-step-card" data-step="3">
+                <div class="pipeline-step-header">
+                  <span class="pipeline-step-num">STAGE 03</span>
+                  <span class="pipeline-step-badge badge-pass">Renderer</span>
+                </div>
+                <div class="pipeline-step-title">Unified Shared HTML Engine</div>
+                <div class="pipeline-step-desc">สร้าง Responsive Master Table Shell + Text Plain Fallback</div>
+              </div>
+
+              <div class="pipeline-step-card" data-step="4">
+                <div class="pipeline-step-header">
+                  <span class="pipeline-step-num">STAGE 04</span>
+                  <span class="pipeline-step-badge badge-warn">Dev Proxy</span>
+                </div>
+                <div class="pipeline-step-title">Vite Dev Proxy / Serverless API</div>
+                <div class="pipeline-step-desc">ส่งผ่าน /api/send-email ป้องกันปัญหา 404 SPA fallback</div>
+              </div>
+
+              <div class="pipeline-step-card" data-step="5">
+                <div class="pipeline-step-header">
+                  <span class="pipeline-step-num">STAGE 05</span>
+                  <span class="pipeline-step-badge badge-pass">SMTP Relay</span>
+                </div>
+                <div class="pipeline-step-title">Gmail SMTP (Port 465 TLS)</div>
+                <div class="pipeline-step-desc">ยืนยัน App Password และรับ Message-ID ตอบกลับ (250 OK)</div>
+              </div>
+
+              <div class="pipeline-step-card" data-step="6">
+                <div class="pipeline-step-header">
+                  <span class="pipeline-step-num">STAGE 06</span>
+                  <span class="pipeline-step-badge badge-pass">Inbound EOP</span>
+                </div>
+                <div class="pipeline-step-title">Microsoft Defender NLP Filter</div>
+                <div class="pipeline-step-desc">ตรวจสอบ SPF/DKIM และตรวจวิเคราะห์คำ Urgency / Phishing</div>
+              </div>
+
+              <div class="pipeline-step-card" data-step="7">
+                <div class="pipeline-step-header">
+                  <span class="pipeline-step-num">STAGE 07</span>
+                  <span class="pipeline-step-badge badge-pass">Focused Inbox</span>
+                </div>
+                <div class="pipeline-step-title">Recipient Focused Inbox</div>
+                <div class="pipeline-step-desc">ส่งถึงกล่องจดหมายหลักของผู้รับสมบูรณ์ (SCL: 0-1 Legitimate)</div>
+              </div>
             </div>
-            <div class="terminal-body">
-<span class="code-comment"># 1. Frontend & Serverless Dispatcher Layer</span>
-[Static App / GitHub Pages] ───(Absolute API Call)───> [Vercel Serverless Function: /api/send-email]
-                                                              │
-                                                              ├─> Supabase `system_settings` (Dynamic SMTP Config)
-                                                              └─> Supabase `system_secrets` (Dynamic App Password)
-                                                              │
-<span class="code-comment"># 2. RFC & Security Assembler Layer</span>
-[Zero-Credential Template] ──> RFC 2047 Base64 Encode ──> Clean RFC 5322 Headers (No X-Mailer / No SCL Trigger)
-                                                              │
-                                                              ▼ <span class="code-string">Implicit Direct TLS Handshake (Port 465 / SMTPS)</span>
-<span class="code-comment"># 3. Google SMTP Gateway (smtp.gmail.com)</span>
-[AUTH LOGIN App Password] ───> Google DKIM Signature ───> SPF Alignment (`Envelope From` = `Header From`)
-                                                              │
-                    ┌─────────────────────────────────────────┴─────────────────────────────────────────┐
-                    ▼ <span class="code-keyword">Corporate Inboxes (Exchange EOP)</span>                                  ▼ <span class="code-keyword">General Inboxes (Gmail/Yahoo/Apple)</span>
-[Microsoft 365 Corporate Mailbox]                                   [Direct Inbox Delivery]
-  • Zero-Credential Content -> ลดความเสี่ยง phishing quarantine       • ตรวจ SPF/DKIM/DMARC alignment
-  • M365 Group: ตรวจ policy กับ Admin ก่อนเปลี่ยน                     • Clean MIME + standard headers
-  • Auto-Subscribe Members Enabled ($true)                            • RFC 2047 Thai Subject Displayed
+
+            <!-- Pipeline Inspector Box -->
+            <div class="pipeline-inspector-box" id="pipeline-inspector">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h4 id="inspector-title" style="font-size:1.05rem; color:#FFFFFF;">STAGE 01: UI Trigger & Form Actions</h4>
+                <span id="inspector-status" class="badge-pass" style="font-size:0.75rem; padding:2px 10px; border-radius:999px;">Verified</span>
+              </div>
+              <p id="inspector-desc" style="font-size:0.88rem; color:var(--text-secondary); line-height:1.6; margin-bottom:12px;">
+                เมื่อมีการบันทึกธุรกรรมในระบบ ฟังก์ชัน Handler จะรวบรวม Parameter และส่งต่อเข้าสู่ Notification Dispatcher โดยไม่ใส่ข้อมูลลับใดๆ
+              </p>
+              <div id="inspector-tech" style="font-family:var(--font-mono); font-size:0.8rem; background:rgba(0,0,0,0.3); padding:10px 14px; border-radius:6px; color:#A5B4FC;">
+                Trigger Source: StockIn.jsx / RequestWithdrawal.jsx ──> dispatchStockInNotification()
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 2: Monospace ASCII Diagram -->
+          <div class="tab-content" id="tab-pipeline-terminal">
+            <div class="code-terminal">
+              <div class="terminal-header">
+                <div class="terminal-dots">
+                  <span class="terminal-dot dot-red"></span>
+                  <span class="terminal-dot dot-yellow"></span>
+                  <span class="terminal-dot dot-green"></span>
+                </div>
+                <span class="terminal-title">system-architecture-pipeline.txt</span>
+                <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem;" data-copy-target="terminal-arch-text">คัดลอกผัง</button>
+              </div>
+              <pre class="terminal-body" id="terminal-arch-text">
+# ==============================================================================
+# STOCKFLOW & GMAIL SMTP END-TO-END NOTIFICATION ARCHITECTURE
+# ==============================================================================
+
+[ Web Application (Frontend / UI) ]
+   │
+   ├─► React UI Actions (StockIn, Withdrawal, Settings)
+   ├─► notificationDispatcher.js (Role Resolver: ADMIN/SUPERVISOR & Cache Deduplication)
+   └─► emailRenderer.js (Shared Responsive Master Table Layout + Inline CSS)
+         │
+         ▼ (HTTP POST /api/send-email)
+[ API Gateway & Development Proxy Layer ]
+   │
+   ├─► Local Development: Vite Dev Server Proxy / Middleware (Vite config mapped)
+   └─► Production: Vercel Serverless Function (api/send-email.js)
+         │
+         ▼ (Nodemailer SMTPS / TLS 1.3 Handshake)
+[ SMTP Relay Service (smtp.gmail.com:465 Implicit TLS) ]
+   │
+   ├─► Envelope Sender Alignment (Return-Path = SMTP Auth Identity)
+   ├─► Clean RFC 5322 Headers (Date, unique Message-ID, Auto-Submitted: auto-generated)
+   └─► SMTP Protocol Result: 250 2.0.0 OK (Relay Acceptance)
+         │
+         ▼ (RFC MIME Transport over Internet)
+[ Enterprise Inbound Gateway (Microsoft 365 Exchange Online) ]
+   │
+   ├─► Exchange Online Protection (EOP): SPF, DKIM, DMARC Validation
+   └─► Defender for Office 365: NLP Urgency Triggers & Phishing Lure Heuristics
+         │
+         ▼ (Spam Confidence Level: SCL 0-1)
+[ Recipient Focused Inbox (watchara.m@forth.co.th) ] ──► 100% INBOX DELIVERY VERIFIED
+              </pre>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Section: Tool 1 - RFC 2047 Live Encoder -->
+    <!-- Section 2: Tool 1 - RFC 2047 Live Encoder -->
     <section class="section" id="encoder">
       <div class="container">
-        <div class="section-header reveal-on-scroll">
+        <div class="section-header">
           <div class="section-tag">
-            <span class="svg-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+            <span class="svg-icon" style="width:15px;height:15px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
             </span>
-            <span data-decrypted-text="RFC MIME Playground">RFC MIME Playground</span>
+            <span>MIME Header Encoding Playground</span>
           </div>
           <h2 class="section-title">RFC 2047 Thai Header Live Encoder</h2>
-          <p class="section-desc">ทดสอบแปลงชื่อผู้ส่งและหัวข้ออีเมลภาษาไทยเป็นมาตรฐาน MIME Header Base64 แบบเรียลไทม์ ป้องกันปัญหาตัวอักษรภาษาไทยกลายเป็นต่างดาวหรือตก Spam</p>
+          <p class="section-desc">แปลงหัวข้อและชื่อผู้ส่งภาษาไทยเป็นมาตรฐาน MIME Header Base64 แบบเรียลไทม์ พร้อมการตัดบรรทัด (Line Folding) ตามมาตรฐาน RFC 5322 ไม่เกิน 78 ตัวอักษร</p>
         </div>
 
-        <div class="tool-box spotlight-card reveal-on-scroll">
+        <div class="tool-box">
+          <!-- Preset Chips -->
+          <div class="preset-chips-group">
+            <span style="font-size:0.8rem; color:var(--text-muted); align-self:center; margin-right:4px;">แม่แบบตัวอย่าง:</span>
+            <button type="button" class="preset-chip active" data-name="ระบบแจ้งเตือนอัตโนมัติ" data-subject="[StockFlow] คำขอเบิก REQ-2026-008 รอการอนุมัติ — โครงการติดตั้งระบบสื่อสาร">+ คำขอเบิกพัสดุ</button>
+            <button type="button" class="preset-chip" data-name="คลังพัสดุส่วนกลาง" data-subject="[StockFlow] แจ้งเตือนรายการพัสดุถึงจุดสั่งซื้อ — สายไฟเบอร์ออปติก 12-Core">+ แจ้งเตือนสต็อกต่ำ</button>
+            <button type="button" class="preset-chip" data-name="เจ้าหน้าที่รับเข้าคลัง" data-subject="[StockFlow] รับเข้า Stock IN-2026-004 — โครงการระบบควบคุมอัจฉริยะ">+ รับเข้าพัสดุ</button>
+            <button type="button" class="preset-chip" data-name="ระบบจัดการสิทธิ์ผู้ใช้งาน" data-subject="ยินดีต้อนรับสู่ระบบ StockFlow — ข้อมูลการเปิดสิทธิ์การใช้งาน">+ เทียบเชิญเข้าใช้งาน</button>
+          </div>
+
           <div class="tool-grid">
             <!-- Left: Inputs -->
             <div>
               <div class="form-group">
                 <label class="form-label" for="rfc-sender-name">
-                  <span>ชื่อผู้ส่งภาษาไทย (Sender Name)</span>
-                  <span class="brand-badge shiny-text">UTF-8</span>
+                  <span>ชื่อผู้ส่งภาษาไทย (Sender Display Name)</span>
+                  <span class="brand-badge">UTF-8</span>
                 </label>
-                <input type="text" id="rfc-sender-name" class="form-input" value="ระบบแจ้งเตือนอัตโนมัติ" placeholder="เช่น ระบบแจ้งเตือนอัตโนมัติ">
+                <input type="text" id="rfc-sender-name" class="form-input" value="ระบบแจ้งเตือนอัตโนมัติ">
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="rfc-sender-email">อีเมลผู้ส่ง (Sender Email)</label>
+                <label class="form-label" for="rfc-sender-email">อีเมลผู้ส่ง (Sender Email Address)</label>
                 <input type="email" id="rfc-sender-email" class="form-input font-mono" value="mailer@yourdomain.com">
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="rfc-subject">หัวข้ออีเมล (Email Subject)</label>
-                <input type="text" id="rfc-subject" class="form-input" value="แจ้งข้อมูลบัญชีผู้ใช้งานระบบ (System Account Notification)" placeholder="พิมพ์หัวข้อภาษาไทยที่นี่...">
+                <label class="form-label" for="rfc-subject">หัวข้ออีเมลภาษาไทย (Email Subject)</label>
+                <input type="text" id="rfc-subject" class="form-input" value="[StockFlow] คำขอเบิก REQ-2026-008 รอการอนุมัติ — โครงการติดตั้งระบบสื่อสาร">
               </div>
 
               <div class="form-group" style="margin-bottom:0;">
-                <div class="form-label"><span>สิ่งที่ผู้รับจะเห็น (Recipient Preview)</span></div>
+                <div class="form-label"><span>สิ่งที่ผู้รับจะเห็นในโปรแกรมอ่านเมล (Recipient View)</span></div>
                 <div class="code-terminal">
-                  <div class="terminal-body" id="rfc-output-preview" style="min-height: 84px; color:#A5B4FC;"></div>
+                  <div class="terminal-body" id="rfc-output-preview" style="min-height:76px; color:#A5B4FC;"></div>
                 </div>
               </div>
             </div>
@@ -248,26 +365,24 @@
             <div>
               <div class="form-group">
                 <div class="form-label">
-                  <span>RFC 5322 MIME Header Output</span>
-                  <span style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
-                    <span id="rfc-status" class="rfc-status ok"></span>
-                    <button type="button" class="btn btn-secondary btn-magnet" style="padding:4px 10px; font-size:0.75rem;" data-copy-target="rfc-output-headers">
-                      <span class="svg-icon">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                      </span>
+                  <span>RFC 5322 Formatted Header Output</span>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span id="rfc-status" class="rfc-status ok">✓ Compliant</span>
+                    <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" data-copy-target="rfc-output-headers">
+                      <span class="svg-icon" style="width:13px;height:13px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></span>
                       คัดลอก Header
                     </button>
-                  </span>
+                  </div>
                 </div>
                 <div class="code-terminal">
-                  <div class="terminal-body" id="rfc-output-headers" style="min-height: 160px;"></div>
+                  <div class="terminal-body" id="rfc-output-headers" style="min-height:165px;"></div>
                 </div>
               </div>
 
               <div class="form-group" style="margin-bottom:0;">
-                <div class="form-label"><span>Encoded Subject Raw String</span></div>
+                <div class="form-label"><span>Raw Encoded Base64 String</span></div>
                 <div class="code-terminal">
-                  <div class="terminal-body" id="rfc-output-raw" style="color:var(--accent-blue-light); padding:10px 16px;"></div>
+                  <div class="terminal-body" id="rfc-output-raw" style="color:var(--accent-blue-light); padding:10px 14px;"></div>
                 </div>
               </div>
             </div>
@@ -276,62 +391,57 @@
       </div>
     </section>
 
-    <!-- Section: Tool 2 - M365 & Corporate Inboxes Suite -->
+    <!-- Section 3: Tool 2 - M365 Corporate Suite -->
     <section class="section" id="m365">
       <div class="container">
-        <div class="section-header reveal-on-scroll">
+        <div class="section-header">
           <div class="section-tag">
-            <span class="svg-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
+            <span class="svg-icon" style="width:15px;height:15px; color:#60A5FA;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/></svg>
             </span>
-            <span data-decrypted-text="Enterprise M365 Suite">Enterprise M365 Suite</span>
+            <span>Enterprise M365 Management</span>
           </div>
           <h2 class="section-title">Microsoft 365 & Corporate Inboxes Suite</h2>
-          <p class="section-desc">สร้างคำสั่งตรวจสอบและแก้ไข Group delivery โดยมีคำเตือนชัดเจนว่าการเปลี่ยน external sender หรือ mail-flow policy ต้องผ่าน Exchange Admin</p>
+          <p class="section-desc">สร้างคำสั่ง Exchange Online PowerShell ตรวจสอบ Directory-Based Edge Blocking (DBEB) และตั้งค่า M365 Unified Group / DL</p>
         </div>
 
-        <div class="tool-box spotlight-card reveal-on-scroll">
+        <div class="tool-box">
           <div class="tool-grid">
             <!-- Settings Form -->
             <div>
               <div class="form-group">
                 <label class="form-label" for="m365-mode-select">
-                  <span>เลือกประเภทการตั้งค่า M365</span>
-                  <span class="brand-badge shiny-text">Exchange Online</span>
+                  <span>เลือกประเภทการตั้งค่า Exchange</span>
+                  <span class="brand-badge">PowerShell</span>
                 </label>
                 <select id="m365-mode-select" class="form-select">
                   <option value="unified">1. Modern Microsoft 365 Unified Group (กลุ่ม M365)</option>
-                  <option value="dl">2. Distribution Group (DL / กลุ่มแจกจ่ายคลาสสิก)</option>
-                  <option value="bypass">3. Mail Flow Rule (Admin review required)</option>
+                  <option value="dl">2. Distribution Group (DL / กลุ่มแจกจ่ายเมล)</option>
+                  <option value="dbeb">3. ตรวจสอบ DBEB (Directory-Based Edge Blocking Simulator)</option>
+                  <option value="bypass">4. Mail Flow Transport Rule (Admin Review Only)</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="m365-group-email">
-                  <span>อีเมลของ Microsoft 365 Group / DL</span>
-                </label>
-                <input type="email" id="m365-group-email" class="form-input font-mono" value="devops-alerts@yourcompany.com" placeholder="group-name@yourdomain.com">
+                <label class="form-label" for="m365-group-email">อีเมล Microsoft 365 Group / Recipient Alias</label>
+                <input type="email" id="m365-group-email" class="form-input font-mono" value="devops-alerts@yourcompany.com">
               </div>
 
-              <div class="form-group">
-                <label class="form-label" for="m365-bypass-sender">
-                  <span>อีเมลผู้ส่งของระบบ (สำหรับ policy ที่ Admin อนุมัติ)</span>
-                </label>
-                <input type="email" id="m365-bypass-sender" class="form-input font-mono" value="app.noreply.mailer@gmail.com" placeholder="app-mailer@gmail.com">
+              <div class="form-group" id="m365-bypass-wrapper">
+                <label class="form-label" for="m365-bypass-sender">อีเมลผู้ส่งของระบบ (Authorized Sender)</label>
+                <input type="email" id="m365-bypass-sender" class="form-input font-mono" value="app.noreply.mailer@gmail.com">
               </div>
 
-              <div class="form-group">
-                <label class="check-item" style="margin-bottom:8px;">
+              <div class="form-group" id="m365-toggles-wrapper">
+                <label class="check-item checked" style="margin-bottom:8px;">
                   <div class="check-left">
-                    <input type="checkbox" id="m365-opt-external" style="display:none;">
+                    <input type="checkbox" id="m365-opt-external" checked style="display:none;">
                     <div class="custom-checkbox">
-                      <span class="svg-icon">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                      </span>
+                      <span class="svg-icon" style="width:13px;height:13px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
                     </div>
                     <div>
-                      <div class="check-text-title">Allow external senders (ต้องได้รับอนุมัติ)</div>
-                      <div class="check-text-desc">สร้างค่าที่อนุญาตผู้ส่งภายนอกเฉพาะเมื่อ policy ของกลุ่มรองรับและมี owner รับผิดชอบ</div>
+                      <div class="check-text-title">Allow external senders ($false)</div>
+                      <div class="check-text-desc">เปิดรับอีเมลจากระบบภายนอก (แก้ปัญหา NDR 550 5.7.133)</div>
                     </div>
                   </div>
                 </label>
@@ -340,33 +450,29 @@
                   <div class="check-left">
                     <input type="checkbox" id="m365-opt-autosub" checked style="display:none;">
                     <div class="custom-checkbox">
-                      <span class="svg-icon">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                      </span>
+                      <span class="svg-icon" style="width:13px;height:13px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
                     </div>
                     <div>
                       <div class="check-text-title">AutoSubscribeNewMembers ($true)</div>
-                      <div class="check-text-desc">ส่งสำเนาต่อเข้า Inbox ส่วนตัวของสมาชิกแต่ละคนใน Outlook อัตโนมัติ</div>
+                      <div class="check-text-desc">กระจายสำเนาเข้า Focused Inbox ส่วนตัวของสมาชิกทุกคนอัตโนมัติ</div>
                     </div>
                   </div>
                 </label>
               </div>
             </div>
 
-            <!-- Generated PowerShell Command -->
+            <!-- Output Terminal -->
             <div>
-              <div class="form-group">
+              <div class="form-group" style="margin-bottom:0;">
                 <div class="form-label">
                   <span>Exchange Online PowerShell Script</span>
-                  <button type="button" class="btn btn-secondary btn-magnet" style="padding:4px 10px; font-size:0.75rem;" data-copy-target="m365-powershell-output">
-                    <span class="svg-icon">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                    </span>
-                    คัดลอก PowerShell
+                  <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" data-copy-target="m365-powershell-output">
+                    <span class="svg-icon" style="width:13px;height:13px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></span>
+                    คัดลอกสคริปต์
                   </button>
                 </div>
                 <div class="code-terminal">
-                  <div class="terminal-body" id="m365-powershell-output" style="min-height: 240px;"></div>
+                  <pre class="terminal-body" id="m365-powershell-output" style="min-height:260px;"></pre>
                 </div>
               </div>
             </div>
@@ -375,142 +481,118 @@
       </div>
     </section>
 
-    <!-- Section: Tool 3 - Zero-Credential Template Generator -->
+    <!-- Section 4: Tool 3 - Zero-Credential Template Generator & Live Preview -->
     <section class="section" id="template">
       <div class="container">
-        <div class="section-header reveal-on-scroll">
+        <div class="section-header">
           <div class="section-tag">
-            <span class="svg-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 12 2 2 4-4"/></svg>
+            <span class="svg-icon" style="width:15px;height:15px; color:#10B981;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 12 2 2 4-4"/></svg>
             </span>
-            <span data-decrypted-text="Defender Anti-Phishing Compliant">Defender Anti-Phishing Compliant</span>
+            <span>Defender Anti-Phishing Compliant</span>
           </div>
-          <h2 class="section-title">Zero-Credential Template Generator</h2>
-          <p class="section-desc">สร้างเทมเพลตอีเมลแจ้งเปิดสิทธิ์บัญชีผู้ใช้แบบ Zero-Credential ปลอดภัยจากการตรวจจับของ Microsoft Defender (ป้องกันการโดนกักกันเป็น SCL 9 Phishing Quarantine)</p>
+          <h2 class="section-title">Zero-Credential Template Sandbox</h2>
+          <p class="section-desc">ทดสอบจำลองแม่แบบอีเมล 6 เหตุการณ์ + Test Diagnostic ภายใต้สถาปัตยกรรม Shared Master Table Layout ที่ผ่านเกณฑ์ความปลอดภัยของ Microsoft Defender (SCL: 0-1)</p>
         </div>
 
-        <div class="tool-box spotlight-card reveal-on-scroll">
+        <div class="tool-box tab-wrapper">
+          <!-- Event Preset Chips -->
+          <div class="preset-chips-group" style="margin-bottom:20px;">
+            <span style="font-size:0.8rem; color:var(--text-muted); align-self:center; margin-right:4px;">เลือกประเภทเหตุการณ์:</span>
+            <button type="button" class="preset-chip active" data-event-type="withdrawal_submitted">1. คำขอเบิกพัสดุใหม่</button>
+            <button type="button" class="preset-chip" data-event-type="withdrawal_approved">2. อนุมัติการเบิก</button>
+            <button type="button" class="preset-chip" data-event-type="withdrawal_rejected">3. ไม่อนุมัติ (Amber Box)</button>
+            <button type="button" class="preset-chip" data-event-type="stock_in_created">4. รับเข้าคลังสต็อก</button>
+            <button type="button" class="preset-chip" data-event-type="low_stock_alert">5. เตือนถึงจุดสั่งซื้อ</button>
+            <button type="button" class="preset-chip" data-event-type="connectivity_test">6. ทดสอบการเชื่อมต่อ SMTP</button>
+            <button type="button" class="preset-chip" data-event-type="user_invitation">7. เทียบเชิญผู้ใช้งาน</button>
+          </div>
+
           <div class="tool-grid">
-            <!-- Left: Inputs -->
+            <!-- Left: Form Controls -->
             <div>
               <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
                 <div class="form-group">
-                  <label class="form-label" for="template-sys-name">ชื่อระบบ (System Name)</label>
-                  <input type="text" id="template-sys-name" class="form-input" value="Enterprise Notification System">
+                  <label class="form-label" for="tpl-sys-name">ชื่อระบบ (System Name)</label>
+                  <input type="text" id="tpl-sys-name" class="form-input" value="StockFlow">
                 </div>
                 <div class="form-group">
-                  <label class="form-label" for="template-brand-color">สีหลักขององค์กร (Brand Color)</label>
-                  <input type="text" id="template-brand-color" class="form-input font-mono" value="#2563EB">
-                </div>
-              </div>
-
-              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
-                <div class="form-group">
-                  <label class="form-label" for="template-recipient-name">ชื่อผู้รับ (Recipient Name)</label>
-                  <input type="text" id="template-recipient-name" class="form-input" value="สมชาย ใจดี">
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="template-recipient-email">อีเมลผู้รับ (Recipient Email)</label>
-                  <input type="email" id="template-recipient-email" class="form-input font-mono" value="somchai@company.com">
+                  <label class="form-label" for="tpl-brand-color">สีปุ่มหลัก (Primary Color)</label>
+                  <input type="text" id="tpl-brand-color" class="form-input font-mono" value="#2563EB">
                 </div>
               </div>
 
               <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
                 <div class="form-group">
-                  <label class="form-label" for="template-user-role">บทบาทสิทธิ์ (Role)</label>
-                  <input type="text" id="template-user-role" class="form-input" value="Operator">
+                  <label class="form-label" for="tpl-recipient-name">ชื่อผู้รับ</label>
+                  <input type="text" id="tpl-recipient-name" class="form-input" value="วัชระ มานะดี">
                 </div>
                 <div class="form-group">
-                  <label class="form-label" for="template-department">สังกัด / แผนก</label>
-                  <input type="text" id="template-department" class="form-input" value="Warehouse Central 01">
+                  <label class="form-label" for="tpl-recipient-email">อีเมลผู้รับ</label>
+                  <input type="email" id="tpl-recipient-email" class="form-input font-mono" value="watchara.m@forth.co.th">
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                <div class="form-group">
+                  <label class="form-label" for="tpl-ref-no">เลขที่เอกสาร / รายการ</label>
+                  <input type="text" id="tpl-ref-no" class="form-input font-mono" value="REQ-2026-008">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="tpl-project-name">โครงการ / แผนก</label>
+                  <input type="text" id="tpl-project-name" class="form-input" value="โครงการติดตั้งระบบโครงข่ายสื่อสาร">
                 </div>
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="template-login-url">ลิงก์เข้าสู่ระบบ (Login URL)</label>
-                <input type="url" id="template-login-url" class="form-input font-mono" value="https://app.yourdomain.com">
+                <label class="form-label" for="tpl-action-url">ลิงก์เปิดดูรายการในระบบ (Action URL)</label>
+                <input type="url" id="tpl-action-url" class="form-input font-mono" value="https://stockflow.forth.co.th/withdrawals/8">
               </div>
 
               <div class="troubleshoot-solution" style="margin-top:16px;">
-                <strong style="color:#34D399;">🛡️ กฎเหล็ก Defender Compliance:</strong> 
-                เทมเพลตนี้ไม่ใส่รหัสผ่านหรือ secret ในอีเมล จึงลดสัญญาณ credential harvesting ได้ แต่ผลลัพธ์สุดท้ายยังขึ้นกับ policy และ reputation ของ tenant ปลายทาง
+                <strong style="color:var(--accent-emerald-light);">[OK] Defender Compliance Rule:</strong>
+                เทมเพลตนี้ใช้ Shared Table Shell ร่วมกันทุกเหตุการณ์ ไม่ระบุรหัสผ่านในเนื้อหา และใช้สี Amber สุภาพแทนสีแดงเตือนภัย จึงผ่านเกณฑ์ SCL: 0-1 สมบูรณ์แบบ
               </div>
             </div>
 
-            <!-- Right: Live Preview & HTML Code -->
-            <div class="tab-wrapper">
-              <div class="tabs-nav" style="margin-bottom:14px;">
-                <button type="button" class="tab-btn active btn-magnet" data-tab="tab-template-preview">
-                  <span class="svg-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></span>
-                  Live Preview
-                </button>
-                <button type="button" class="tab-btn btn-magnet" data-tab="tab-template-code">
-                  <span class="svg-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
-                  HTML Source Code
-                </button>
+            <!-- Right: Live Canvas Preview & HTML Code -->
+            <div>
+              <div class="tabs-nav" style="justify-content:space-between; align-items:center;">
+                <div style="display:flex; gap:8px;">
+                  <button type="button" class="tab-btn active" data-tab="tab-tpl-preview">Live Client Preview</button>
+                  <button type="button" class="tab-btn" data-tab="tab-tpl-code">HTML Source</button>
+                </div>
+                <div class="view-mode-toggle">
+                  <button type="button" class="view-mode-btn active" id="view-desktop-btn">Desktop (620px)</button>
+                  <button type="button" class="view-mode-btn" id="view-mobile-btn">Mobile (375px)</button>
+                </div>
               </div>
 
-              <!-- Tab 1: Live Preview -->
-              <div class="tab-content active" id="tab-template-preview">
+              <!-- Tab 1: Live Preview Canvas -->
+              <div class="tab-content active" id="tab-tpl-preview">
                 <div class="template-preview-container">
                   <div class="template-preview-bar">
                     <div class="template-preview-meta">
-                      <span class="badge-success" style="padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:600;">Zero-credential content</span>
-                      <span>Outlook Web Mockup</span>
+                      <span class="badge-pass" style="padding:2px 8px; border-radius:4px; font-size:0.72rem;">SCL: 0 Legitimate</span>
+                      <span>Outlook Web Simulation</span>
                     </div>
                   </div>
-                  <div class="template-email-canvas">
-                    <div class="email-mockup-card">
-                      <div class="email-mockup-header">
-                        <div>
-                          <h3 id="email-mock-sys-name" style="margin:0; font-size:1.15rem; color:#0F172A; font-weight:700;">Enterprise Notification System</h3>
-                          <p style="margin:2px 0 0 0; font-size:0.8rem; color:#64748B;">การแจ้งเตือนบัญชีผู้ใช้งานระบบอย่างเป็นทางการ</p>
-                        </div>
-                      </div>
-                      <div class="email-mockup-body">
-                        <p id="email-mock-recipient" style="margin-bottom:10px;">เรียน คุณ <strong>สมชาย ใจดี</strong>,</p>
-                        <p>ผู้ดูแลระบบได้สร้างและเปิดสิทธิ์การเข้าใช้งานระบบสำหรับบัญชีของคุณเรียบร้อยแล้ว โดยมีรายละเอียดข้อมูลบัญชีดังนี้:</p>
-
-                        <table class="email-info-table">
-                          <tr>
-                            <td class="label-col">ชื่อ-นามสกุล:</td>
-                            <td class="value-col" id="email-mock-name-val">สมชาย ใจดี</td>
-                          </tr>
-                          <tr>
-                            <td class="label-col">อีเมลประจำตัว:</td>
-                            <td class="value-col" id="email-mock-email-val">somchai@company.com</td>
-                          </tr>
-                          <tr>
-                            <td class="label-col">บทบาทสิทธิ์:</td>
-                            <td class="value-col" id="email-mock-role-val">Operator</td>
-                          </tr>
-                          <tr>
-                            <td class="label-col">สังกัด / แผนก:</td>
-                            <td class="value-col" id="email-mock-dept-val">Warehouse Central 01</td>
-                          </tr>
-                        </table>
-
-                        <div style="text-align:center; margin:20px 0 10px 0;">
-                          <a href="#" id="email-mock-btn" class="email-cta-btn" target="_blank">เข้าสู่ระบบเพื่อเริ่มใช้งาน</a>
-                        </div>
-
-                        <div class="email-footer-notice">
-                          <strong>คำแนะนำด้านความปลอดภัย:</strong> โปรดใช้รหัสผ่านตั้งต้นขององค์กรเพื่อเข้าสู่ระบบ หรือติดต่อผู้ดูแลระบบหากไม่ได้รับรหัสผ่าน เพื่อความปลอดภัยสูงสุดระบบจะไม่มีการระบุรหัสผ่านในอีเมล
-                        </div>
-                      </div>
+                  <div class="template-email-canvas" id="email-canvas-wrapper">
+                    <div class="email-mockup-card" id="email-mockup-card">
+                      <!-- Rendered dynamically by app.js -->
                     </div>
                   </div>
                 </div>
               </div>
 
               <!-- Tab 2: HTML Source Code -->
-              <div class="tab-content" id="tab-template-code">
+              <div class="tab-content" id="tab-tpl-code">
                 <div class="code-terminal">
                   <div class="terminal-header">
-                    <span class="terminal-title">zero-credential-template.html</span>
-                    <button type="button" class="btn btn-secondary btn-magnet" style="padding:2px 8px; font-size:0.75rem;" data-copy-target="template-html-code">คัดลอก HTML</button>
+                    <span class="terminal-title">shared-email-template.html</span>
+                    <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem;" data-copy-target="tpl-html-code-pre">คัดลอก HTML</button>
                   </div>
-                  <pre class="terminal-body" id="template-html-code" style="max-height:360px; overflow-y:auto;"></pre>
+                  <pre class="terminal-body" id="tpl-html-code-pre" style="max-height:360px; overflow-y:auto;"></pre>
                 </div>
               </div>
             </div>
@@ -519,109 +601,117 @@
       </div>
     </section>
 
-    <!-- Section: Tool 4 - Anti-Spam Deliverability Score Calculator -->
+    <!-- Section 5: Tool 4 - Anti-Spam Deliverability Score Calculator -->
     <section class="section" id="calculator">
       <div class="container">
-        <div class="section-header reveal-on-scroll">
+        <div class="section-header">
           <div class="section-tag">
-            <span class="svg-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+            <span class="svg-icon" style="width:15px;height:15px; color:#10B981;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
             </span>
-            <span data-decrypted-text="Inbox & EOP Optimization">Inbox & EOP Optimization</span>
+            <span>Deliverability & SCL Evaluator</span>
           </div>
           <h2 class="section-title">Anti-Spam & EOP Deliverability Calculator</h2>
-          <p class="section-desc">ประเมินความพร้อมและอัตราการส่งถึง Inbox ตามเกณฑ์มาตรฐาน Google/Yahoo 2024+ และเกณฑ์ Microsoft Defender Anti-Phishing</p>
+          <p class="section-desc">ประเมินคะแนนโอกาสส่งเข้า Focused Inbox ตามเกณฑ์มาตรฐาน Google/Yahoo และอัลกอริทึม Microsoft Defender Anti-Phishing</p>
         </div>
 
-        <div class="tool-box spotlight-card reveal-on-scroll">
+        <div class="tool-box">
           <div class="tool-grid">
             <!-- Checklist Items -->
             <div class="calc-checklist">
-              <div class="check-item checked" data-weight="20" data-advice="ตั้งค่า Envelope From ให้ตรงกับ Header From เพื่อให้ Google DKIM เซ็นถูกต้อง">
+              <div class="check-item checked" data-weight="20" data-advice="จัดวาง Envelope Sender (Return-Path) ให้ตรงกับ SMTP Identity">
                 <div class="check-left">
                   <div class="custom-checkbox">
-                    <span class="svg-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <span class="svg-icon" style="width:13px;height:13px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
                   </div>
                   <div>
-                    <div class="check-text-title">SPF & DKIM Domain Alignment</div>
-                    <div class="check-text-desc">Envelope From (`MAIL FROM`) ตรงกับ Header `From:` ให้ DKIM สมบูรณ์ (+20%)</div>
+                    <div class="check-text-title">SPF, DKIM & DMARC Alignment</div>
+                    <div class="check-text-desc">Envelope Sender ตรงกับ Header From ให้ลายเซ็น DKIM สมบูรณ์ (+20%)</div>
                   </div>
                 </div>
               </div>
 
-              <div class="check-item checked" data-weight="15" data-advice="ใช้โครงสร้าง multipart/alternative ที่มีทั้ง text/plain และ text/html">
+              <div class="check-item checked" data-weight="15" data-advice="ใช้โครงสร้าง multipart/alternative ที่มีทั้ง text/plain และ HTML">
                 <div class="check-left">
                   <div class="custom-checkbox">
-                    <span class="svg-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <span class="svg-icon" style="width:13px;height:13px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
                   </div>
                   <div>
-                    <div class="check-text-title">MIME Multipart Alternative</div>
-                    <div class="check-text-desc">มีทั้ง Plain Text และ HTML Body คู่กันเสมอตามมาตรฐาน RFC 5322 (+15%)</div>
+                    <div class="check-text-title">MIME Multipart/Alternative Architecture</div>
+                    <div class="check-text-desc">ส่งทั้ง Plain Text และ HTML Body ควบคู่กันตามมาตรฐาน RFC 5322 (+15%)</div>
                   </div>
                 </div>
               </div>
 
-              <div class="check-item checked" data-weight="15" data-advice="เข้ารหัส Subject และ Sender Name ภาษาไทยด้วย RFC 2047 Base64">
+              <div class="check-item checked" data-weight="15" data-advice="เข้ารหัสหัวข้อและชื่อผู้ส่งภาษาไทยด้วย RFC 2047 Base64">
                 <div class="check-left">
                   <div class="custom-checkbox">
-                    <span class="svg-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <span class="svg-icon" style="width:13px;height:13px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
                   </div>
                   <div>
-                    <div class="check-text-title">RFC 2047 Thai Header Encoding</div>
-                    <div class="check-text-desc">เข้ารหัสภาษาไทยแบบ `=?UTF-8?B?...?=` ป้องกัน Header พัง (+15%)</div>
+                    <div class="check-text-title">RFC 2047 Thai Header Base64 Encoding</div>
+                    <div class="check-text-desc">เข้ารหัส `=?UTF-8?B?...?=` พร้อมตัดบรรทัดไม่เกิน 78 ตัวอักษร (+15%)</div>
                   </div>
                 </div>
               </div>
 
-              <div class="check-item checked" data-weight="20" data-advice="ห้ามระบุรหัสผ่านในเนื้อหาอีเมล เพื่อป้องกัน Defender จัดเป็น High-Confidence Phishing (SCL 9 Quarantine)">
+              <div class="check-item checked" data-weight="20" data-advice="ห้ามระบุรหัสผ่านในเนื้อหาอีเมล เพื่อป้องกันการถูกกักกันเป็น SCL 9 Phishing">
                 <div class="check-left">
                   <div class="custom-checkbox">
-                    <span class="svg-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <span class="svg-icon" style="width:13px;height:13px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
                   </div>
                   <div>
-                    <div class="check-text-title">Zero-Credential Exposure (EOP Compliant)</div>
-                    <div class="check-text-desc">ไม่ใส่ Plaintext Password ในอีเมล ป้องกันการโดน Defender กักกัน (+20%)</div>
+                    <div class="check-text-title">Zero-Credential Exposure Policy</div>
+                    <div class="check-text-desc">ไม่ใส่ Plaintext Password ในอีเมล ป้องกันการถูก Defender กักกันเงียบ (+20%)</div>
                   </div>
                 </div>
               </div>
 
-              <div class="check-item checked" data-weight="15" data-advice="ถอด Header X-Mailer, Auto-Submitted, X-Priority ออกเพื่อป้องกัน Bot Anomaly Heuristics">
+              <div class="check-item checked" data-weight="15" data-advice="ขจัดคำเตือนภัยรุนแรง และกล่องสีแดงเข้มคู่กับลิงก์ภายนอก">
                 <div class="check-left">
                   <div class="custom-checkbox">
-                    <span class="svg-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <span class="svg-icon" style="width:13px;height:13px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
                   </div>
                   <div>
-                    <div class="check-text-title">Clean Header Hygiene</div>
-                    <div class="check-text-desc">ถอด `X-Mailer`, `Auto-Submitted`, `Precedence` ที่ทำให้ M365 กักกัน (+15%)</div>
+                    <div class="check-text-title">Anti-Spam NLP & Visual Phishing Lure Hygiene</div>
+                    <div class="check-text-desc">หลีกเลี่ยงคำว่า 'เตือนภัย:' และใช้โทนสี Amber สุภาพแทนสีแดงเข้มจัด (+15%)</div>
                   </div>
                 </div>
               </div>
 
-              <div class="check-item checked" data-weight="15" data-advice="หลีกเลี่ยง URL Shortener (bit.ly) และหน่วงเวลาส่ง 500ms+ ระหว่างฉบับ">
+              <div class="check-item checked" data-weight="15" data-advice="ลบ Header X-Mailer, X-Priority: 1, และ DSN ที่ไม่จำเป็นออก">
                 <div class="check-left">
                   <div class="custom-checkbox">
-                    <span class="svg-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <span class="svg-icon" style="width:13px;height:13px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
                   </div>
                   <div>
-                    <div class="check-text-title">Link Hygiene & Rate Throttling</div>
-                    <div class="check-text-desc">HTTPS จริง ไม่ใช้ URL Shortener และหน่วงเวลาส่ง 500ms - 1000ms (+15%)</div>
+                    <div class="check-text-title">RFC Standard Header Hygiene</div>
+                    <div class="check-text-desc">ใช้เฉพาะ `Auto-Submitted: auto-generated`, `X-Priority: 3`, `Content-Language` (+15%)</div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Gauge & Recommendation (React Bits SpotlightCard) -->
-            <div class="score-gauge-card spotlight-card tilted-card">
-              <div class="gauge-circle" id="calc-gauge-circle">
-                <div class="gauge-inner">
-                  <div class="gauge-value" id="calc-score-value">100%</div>
-                  <div class="gauge-label">Deliverability</div>
+            <!-- Gauge Output Card -->
+            <div class="score-gauge-card">
+              <div class="gauge-svg-container">
+                <svg width="170" height="170" viewBox="0 0 170 170">
+                  <circle class="gauge-bg-circle" cx="85" cy="85" r="70"></circle>
+                  <circle class="gauge-progress-circle" id="gauge-progress-circle" cx="85" cy="85" r="70"></circle>
+                </svg>
+                <div class="gauge-center-text">
+                  <div class="gauge-score-num" id="gauge-score-val">100%</div>
+                  <div class="gauge-score-label">Focused Inbox</div>
                 </div>
               </div>
-              <h3 id="calc-rating-text" style="font-size:1.1rem; margin-bottom:12px; font-weight:700;">เริ่มต้นด้วยการตรวจสอบ header และ authentication</h3>
+
+              <h3 id="gauge-rating-title" style="font-size:1.1rem; margin-bottom:12px; font-weight:700; color:var(--accent-emerald-light);">ผ่านเกณฑ์ความปลอดภัยสมบูรณ์แบบ (SCL: 0-1)</h3>
+              
               <div style="text-align:left; width:100%; border-top:1px solid var(--border-subtle); padding-top:16px;">
-                <div style="font-size:0.82rem; font-weight:600; color:var(--text-muted); margin-bottom:8px;">คำแนะนำเพื่อเพิ่มคะแนน:</div>
-                <ul id="calc-advice-list" style="font-size:0.85rem; padding-left:20px; line-height:1.6; color:var(--text-secondary);"></ul>
+                <div style="font-size:0.8rem; font-weight:600; color:var(--text-muted); margin-bottom:8px;">คำแนะนำสำหรับการปรับปรุง:</div>
+                <ul id="gauge-advice-list" style="font-size:0.84rem; padding-left:18px; line-height:1.6; color:var(--text-secondary);">
+                  <li>ตั้งค่า SPF, DKIM และ DMARC ครบถ้วน</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -629,99 +719,136 @@
       </div>
     </section>
 
-    <!-- Section: Troubleshooting Hub -->
+    <!-- Section 6: Troubleshooting Hub (Matrix) -->
     <section class="section" id="troubleshoot">
       <div class="container">
-        <div class="section-header reveal-on-scroll">
+        <div class="section-header">
           <div class="section-tag">
-            <span class="svg-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span class="svg-icon" style="width:15px;height:15px; color:#EF4444;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             </span>
-            <span data-decrypted-text="Corporate Inboxes Diagnostics">Corporate Inboxes Diagnostics</span>
+            <span>Diagnostic & Case Studies</span>
           </div>
-          <h2 class="section-title">ศูนย์รวมการวิเคราะห์ปัญหาที่พบบ่อย (Troubleshooting Hub)</h2>
-          <p class="section-desc">รวมกรณีศึกษาจริงและวิธีแก้ปัญหาการส่งอีเมลเข้า Microsoft 365, Defender Quarantine และ Web Application Auth Fallback</p>
+          <h2 class="section-title">ศูนย์รวมการวิเคราะห์ปัญหาที่พบบ่อย (Troubleshooting Matrix)</h2>
+          <p class="section-desc">รวบรวมกรณีศึกษาจากเหตุการณ์จริง ปัญหาการกักกันของ Microsoft Defender, DBEB Bounces, Dev Proxy 404 และการตั้งค่า Group</p>
         </div>
 
-        <div class="troubleshoot-grid reveal-on-scroll">
-          <!-- Problem 1 -->
-          <div class="troubleshoot-card spotlight-card tilted-card">
+        <div class="troubleshoot-filters">
+          <button type="button" class="filter-btn active" data-filter="all">ทั้งหมด (All Cases)</button>
+          <button type="button" class="filter-btn" data-filter="m365">Microsoft 365 & Defender</button>
+          <button type="button" class="filter-btn" data-filter="dev">Development & Routing</button>
+          <button type="button" class="filter-btn" data-filter="smtp">SMTP & Transport</button>
+        </div>
+
+        <div class="troubleshoot-grid">
+          <!-- Card 1 -->
+          <div class="troubleshoot-card" data-category="m365">
             <div class="troubleshoot-badge-row">
-              <span class="badge-danger">High-Confidence Phishing (SCL 9)</span>
-              <span style="font-size:0.8rem; color:var(--text-muted);">Admin Quarantine</span>
+              <span class="badge-danger">Phishing Quarantine (SCL 9)</span>
+              <span style="font-size:0.78rem; color:var(--text-muted);">M365 Defender</span>
             </div>
-            <h3 class="troubleshoot-title">อีเมลส่งออกจาก Gmail สำเร็จ แต่ผู้รับใน Outlook ไม่เห็นแม้แต่ใน Junk Mail</h3>
+            <h3 class="troubleshoot-title">ส่งสำเร็จจาก Gmail (250 OK) แต่ไม่เข้า Inbox และไม่พบใน Junk</h3>
             <div class="troubleshoot-problem">
-              <strong>สาเหตุ:</strong> ส่งจากอีเมลภายนอก (`@gmail.com`) แล้วใส่ Plaintext Password หรือคำว่า "รหัสผ่านตั้งต้น" + ลิงก์เข้าสู่ระบบภายนอก Defender จัดเป็น Credential Harvesting และกักกันเงียบใน Admin Quarantine
+              <strong>สาเหตุ:</strong> ใช้คำเตือนภัยรุนแรง (*"เตือนภัย:"*, *"ด่วนที่สุด"*) หรือใส่รหัสผ่านคู่กับลิงก์ภายนอก ทำให้ AI ของ Defender กักกันเข้า Admin Quarantine
             </div>
             <div class="troubleshoot-solution">
-              <strong>วิธีแก้ไข:</strong> ใช้ <code>Zero-Credential Administrative Template</code> ส่งเฉพาะข้อมูลเปิดสิทธิ์และปุ่มล็อกอิน โดยให้ผู้ใช้ใช้รหัสผ่านองค์กรหรือส่งรหัสผ่านผ่านช่องทางอื่น
+              <strong>วิธีแก้ไข:</strong> ใช้ภาษาทางการของการจัดการพัสดุ (เช่น *"แจ้งเตือนรายการพัสดุถึงจุดสั่งซื้อ"*), ปรับกล่องข้อความเป็นสี Amber และไม่ระบุรหัสผ่านในอีเมล
             </div>
           </div>
 
-          <!-- Problem 2 -->
-          <div class="troubleshoot-card spotlight-card tilted-card">
+          <!-- Card 2 -->
+          <div class="troubleshoot-card" data-category="dev">
+            <div class="troubleshoot-badge-row">
+              <span class="badge-danger">HTTP 404 / SPA Fallback</span>
+              <span style="font-size:0.78rem; color:var(--text-muted);">Local Development</span>
+            </div>
+            <h3 class="troubleshoot-title">กดส่งอีเมลจาก Webapp ในเครื่อง Dev แล้วแจ้ง Error 404 Not Found</h3>
+            <div class="troubleshoot-problem">
+              <strong>สาเหตุ:</strong> ไฟล์ `api/send-email.js` เป็น Serverless Function ซึ่ง Vite Dev Server ในเครื่องไม่ได้แมปเส้นทาง จึงส่งกลับเป็นไฟล์ `index.html` แทน
+            </div>
+            <div class="troubleshoot-solution">
+              <strong>วิธีแก้ไข:</strong> ติดตั้ง Dev Proxy หรือ Middleware ใน `vite.config.js` เพื่อดักจับเส้นทาง `/api/send-email` ส่งต่อไปยัง Local Serverless Runtime
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="troubleshoot-card" data-category="m365">
+            <div class="troubleshoot-badge-row">
+              <span class="badge-warning">NDR 550 5.4.1 Access Denied</span>
+              <span style="font-size:0.78rem; color:var(--text-muted);">Directory Edge Blocking</span>
+            </div>
+            <h3 class="troubleshoot-title">อีเมลถูกตีกลับ 550 5.4.1 Recipient address rejected: Access denied</h3>
+            <div class="troubleshoot-problem">
+              <strong>สาเหตุ:</strong> ฟีเจอร์ DBEB ของ Microsoft 365 สกัดกั้นที่อยู่อีเมลผู้รับที่ไม่มีอยู่จริง หรือยังไม่ได้ถูก Provisioning ใน Entra ID
+            </div>
+            <div class="troubleshoot-solution">
+              <strong>วิธีแก้ไข:</strong> ตรวจสอบความถูกต้องของชื่อ Mailbox/Alias กับผู้ดูแลระบบ Exchange ปลายทาง และเพิ่มที่อยู่ผิดเข้า Suppression List
+            </div>
+          </div>
+
+          <!-- Card 4 -->
+          <div class="troubleshoot-card" data-category="m365">
             <div class="troubleshoot-badge-row">
               <span class="badge-warning">NDR 550 5.7.133</span>
-              <span style="font-size:0.8rem; color:var(--text-muted);">Distribution Group</span>
+              <span style="font-size:0.78rem; color:var(--text-muted);">Distribution Group</span>
             </div>
             <h3 class="troubleshoot-title">ส่งเข้า M365 Group แล้วได้รับอีเมลตีกลับ 550 5.7.133</h3>
             <div class="troubleshoot-problem">
-              <strong>สาเหตุ:</strong> นโยบายความปลอดภัยเริ่มต้นของ Microsoft 365 Group ปิดกั้นไม่รับอีเมลจากผู้ส่งภายนอกองค์กร (SenderNotAuthenticatedForGroup)
+              <strong>สาเหตุ:</strong> Microsoft 365 Unified Group ปิดรับอีเมลจากผู้ส่งภายนอกองค์กรโดยเริ่มต้น (SenderNotAuthenticatedForGroup)
             </div>
             <div class="troubleshoot-solution">
-              <strong>วิธีแก้ไข:</strong> รันคำสั่ง Exchange PowerShell: <code>Set-UnifiedGroup -Identity "group@company.com" -RequireSenderAuthenticationEnabled $false</code>
+              <strong>วิธีแก้ไข:</strong> ให้ Exchange Admin รันคำสั่ง `Set-UnifiedGroup -Identity "group@company.com" -RequireSenderAuthenticationEnabled $false`
             </div>
           </div>
 
-          <!-- Problem 3 -->
-          <div class="troubleshoot-card spotlight-card tilted-card">
+          <!-- Card 5 -->
+          <div class="troubleshoot-card" data-category="smtp">
             <div class="troubleshoot-badge-row">
-              <span class="badge-info">Group Subscription</span>
-              <span style="font-size:0.8rem; color:var(--text-muted);">Outlook Behavior</span>
+              <span class="badge-danger">SMTP 535 / EAUTH</span>
+              <span style="font-size:0.78rem; color:var(--text-muted);">Authentication Failure</span>
             </div>
-            <h3 class="troubleshoot-title">อีเมลเข้า Group Mailbox กลาง แต่ไม่เด้งเข้า Inbox ส่วนตัวของสมาชิก</h3>
+            <h3 class="troubleshoot-title">การเชื่อมต่อล้มเหลวด้วยข้อผิดพลาด Invalid Credentials (535)</h3>
             <div class="troubleshoot-problem">
-              <strong>สาเหตุ:</strong> สมาชิกใน M365 Group ไม่ได้เปิดการรับสำเนา (Copy to Inbox) หรือมี Header <code>Auto-Submitted: auto-generated</code> ที่ทำให้ M365 ข้ามการส่งต่อ
+              <strong>สาเหตุ:</strong> ใช้รหัสผ่านบัญชี Google จริง หรือ Google App Password 16 หลักถูกเพิกถอน / คอนฟิก Port และ TLS ไม่ตรงกัน
             </div>
             <div class="troubleshoot-solution">
-              <strong>วิธีแก้ไข:</strong> รัน <code>Set-UnifiedGroup -AutoSubscribeNewMembers $true</code> และถอด Header <code>Auto-Submitted</code> ออกจากระบบส่ง
+              <strong>วิธีแก้ไข:</strong> สร้าง Google App Password ใหม่ผ่านบัญชี Google ที่เปิด 2-Step Verification และใช้ Port 465 (Implicit TLS)
             </div>
           </div>
 
-          <!-- Problem 4 -->
-          <div class="troubleshoot-card spotlight-card tilted-card">
+          <!-- Card 6 -->
+          <div class="troubleshoot-card" data-category="dev">
             <div class="troubleshoot-badge-row">
-              <span class="badge-danger">Silent Auth Fallback</span>
-              <span style="font-size:0.8rem; color:var(--text-muted);">Frontend Routing Bug</span>
+              <span class="badge-info">DB State Override</span>
+              <span style="font-size:0.78rem; color:var(--text-muted);">Database Sync</span>
             </div>
-            <h3 class="troubleshoot-title">Frontend ส่งแล้วได้อีเมลรีเซ็ตรหัสผ่านภาษาอังกฤษของ Supabase แทน</h3>
+            <h3 class="troubleshoot-title">แก้โค้ดแม่แบบในไฟล์แล้ว แต่หน้าเว็บยังคงดึงข้อความเก่ามาแสดง</h3>
             <div class="troubleshoot-problem">
-              <strong>สาเหตุ:</strong> Frontend บน Static Hosting (GitHub Pages) เรียก Relative URL <code>/api/send-email</code> (404 Not Found) ทำให้ Client ตกไปเรียก Third-party Auth Fallback
+              <strong>สาเหตุ:</strong> ฟังก์ชัน Fetch Settings ดึงข้อมูล JSON แม่แบบเก่าที่เคยบันทึกไว้ใน Supabase Database มาเขียนทับ Default Config ในโค้ดใหม่
             </div>
             <div class="troubleshoot-solution">
-              <strong>วิธีแก้ไข:</strong> กำหนด Absolute Serverless URL บน Vercel พร้อมดึง Dynamic SMTP Settings จาก Database เพื่อส่งผ่าน Native Gmail SMTP
+              <strong>วิธีแก้ไข:</strong> ติดตั้งฟังก์ชัน `mergeEventsWithDefaults` เพื่อ Auto-Upgrade แม่แบบเก่า และเพิ่มปุ่ม Reset to Default บนหน้าเว็บ
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Section: Tool 5 - Dynamic Code Generator -->
+    <!-- Section 7: Tool 5 - Dynamic Code Generator -->
     <section class="section" id="code-gen">
       <div class="container">
-        <div class="section-header reveal-on-scroll">
+        <div class="section-header">
           <div class="section-tag">
-            <span class="svg-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            <span class="svg-icon" style="width:15px;height:15px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
             </span>
-            <span data-decrypted-text="Production Implementations">Production Implementations</span>
+            <span>Production Implementation Snippets</span>
           </div>
           <h2 class="section-title">Production Code Generator</h2>
-          <p class="section-desc">สร้างโค้ดสำหรับส่งอีเมลพร้อมใช้งาน ทั้ง Native Node.js TLS, Serverless Dispatcher, Nodemailer และ Python</p>
+          <p class="section-desc">สร้างโค้ดสำหรับส่งอีเมลพร้อมใช้งาน ทั้ง Node.js Native TLS (Zero Dependencies), Serverless Dispatcher, Nodemailer, Python และ Go</p>
         </div>
 
-        <div class="tool-box spotlight-card tab-wrapper reveal-on-scroll">
+        <div class="tool-box tab-wrapper">
           <!-- Parameter Inputs -->
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:24px;">
             <div class="form-group" style="margin-bottom:0;">
@@ -746,120 +873,100 @@
             </div>
             <div class="form-group" style="margin-bottom:0;">
               <label class="form-label" for="gen-to">To Address</label>
-              <input type="email" id="gen-to" class="form-input font-mono" value="somchai@company.com">
+              <input type="email" id="gen-to" class="form-input font-mono" value="watchara.m@forth.co.th">
             </div>
           </div>
 
-          <!-- Tab Navigation -->
+          <!-- Language Tabs -->
           <div class="tabs-nav">
-            <button type="button" class="tab-btn active btn-magnet" data-tab="tab-node-native">
-              <span class="svg-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7.5v9L12 22l10-5.5v-9L12 2zm0 2.3l7.5 4.1-7.5 4.2-7.5-4.2L12 4.3z"/></svg></span>
-              Node.js Native TLS (Zero Deps)
-            </button>
-            <button type="button" class="tab-btn btn-magnet" data-tab="tab-serverless">
-              <span class="svg-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
-              Serverless Dispatcher (Dynamic DB Config)
-            </button>
-            <button type="button" class="tab-btn btn-magnet" data-tab="tab-nodemailer">
-              <span class="svg-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></span>
-              Nodemailer (EOP Headers)
-            </button>
-            <button type="button" class="tab-btn btn-magnet" data-tab="tab-python">
-              <span class="svg-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9v-2h2v2zm0-4H9V7h2v5z"/></svg></span>
-              Python (smtplib)
-            </button>
+            <button type="button" class="tab-btn active" data-tab="tab-code-node-native">Node.js Native TLS (Zero Deps)</button>
+            <button type="button" class="tab-btn" data-tab="tab-code-serverless">Serverless Function (Vercel/Node)</button>
+            <button type="button" class="tab-btn" data-tab="tab-code-nodemailer">Nodemailer (EOP Headers)</button>
+            <button type="button" class="tab-btn" data-tab="tab-code-python">Python (smtplib)</button>
+            <button type="button" class="tab-btn" data-tab="tab-code-go">Go (net/smtp)</button>
           </div>
 
           <!-- Tab 1: Node.js Native -->
-          <div class="tab-content active" id="tab-node-native">
+          <div class="tab-content active" id="tab-code-node-native">
             <div class="code-terminal">
               <div class="terminal-header">
-                <div class="terminal-dots">
-                  <span class="terminal-dot dot-red"></span>
-                  <span class="terminal-dot dot-yellow"></span>
-                  <span class="terminal-dot dot-green"></span>
-                </div>
                 <span class="terminal-title">native-tls-smtp.js</span>
-                <button type="button" class="btn btn-secondary btn-magnet" style="padding:2px 8px; font-size:0.75rem;" data-copy-target="code-node-native">คัดลอกโค้ด</button>
+                <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem;" data-copy-target="code-node-native-pre">คัดลอกโค้ด</button>
               </div>
-              <pre class="terminal-body" id="code-node-native"></pre>
+              <pre class="terminal-body" id="code-node-native-pre"></pre>
             </div>
           </div>
 
-          <!-- Tab 2: Serverless Dispatcher -->
-          <div class="tab-content" id="tab-serverless">
+          <!-- Tab 2: Serverless -->
+          <div class="tab-content" id="tab-code-serverless">
             <div class="code-terminal">
               <div class="terminal-header">
-                <div class="terminal-dots">
-                  <span class="terminal-dot dot-red"></span>
-                  <span class="terminal-dot dot-yellow"></span>
-                  <span class="terminal-dot dot-green"></span>
-                </div>
-                <span class="terminal-title">api/send-email.js (Vercel Serverless Function)</span>
-                <button type="button" class="btn btn-secondary btn-magnet" style="padding:2px 8px; font-size:0.75rem;" data-copy-target="code-serverless">คัดลอกโค้ด</button>
+                <span class="terminal-title">api/send-email.js (Serverless API)</span>
+                <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem;" data-copy-target="code-serverless-pre">คัดลอกโค้ด</button>
               </div>
-              <pre class="terminal-body" id="code-serverless"></pre>
+              <pre class="terminal-body" id="code-serverless-pre"></pre>
             </div>
           </div>
 
           <!-- Tab 3: Nodemailer -->
-          <div class="tab-content" id="tab-nodemailer">
+          <div class="tab-content" id="tab-code-nodemailer">
             <div class="code-terminal">
               <div class="terminal-header">
-                <div class="terminal-dots">
-                  <span class="terminal-dot dot-red"></span>
-                  <span class="terminal-dot dot-yellow"></span>
-                  <span class="terminal-dot dot-green"></span>
-                </div>
                 <span class="terminal-title">nodemailer-eop-config.js</span>
-                <button type="button" class="btn btn-secondary btn-magnet" style="padding:2px 8px; font-size:0.75rem;" data-copy-target="code-nodemailer">คัดลอกโค้ด</button>
+                <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem;" data-copy-target="code-nodemailer-pre">คัดลอกโค้ด</button>
               </div>
-              <pre class="terminal-body" id="code-nodemailer"></pre>
+              <pre class="terminal-body" id="code-nodemailer-pre"></pre>
             </div>
           </div>
 
           <!-- Tab 4: Python -->
-          <div class="tab-content" id="tab-python">
+          <div class="tab-content" id="tab-code-python">
             <div class="code-terminal">
               <div class="terminal-header">
-                <div class="terminal-dots">
-                  <span class="terminal-dot dot-red"></span>
-                  <span class="terminal-dot dot-yellow"></span>
-                  <span class="terminal-dot dot-green"></span>
-                </div>
                 <span class="terminal-title">smtp_mailer.py</span>
-                <button type="button" class="btn btn-secondary btn-magnet" style="padding:2px 8px; font-size:0.75rem;" data-copy-target="code-python">คัดลอกโค้ด</button>
+                <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem;" data-copy-target="code-python-pre">คัดลอกโค้ด</button>
               </div>
-              <pre class="terminal-body" id="code-python"></pre>
+              <pre class="terminal-body" id="code-python-pre"></pre>
+            </div>
+          </div>
+
+          <!-- Tab 5: Go -->
+          <div class="tab-content" id="tab-code-go">
+            <div class="code-terminal">
+              <div class="terminal-header">
+                <span class="terminal-title">smtp_sender.go</span>
+                <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem;" data-copy-target="code-go-pre">คัดลอกโค้ด</button>
+              </div>
+              <pre class="terminal-body" id="code-go-pre"></pre>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Section: Connection Matrix Table -->
+    <!-- Section 8: Protocols & Connection Matrix -->
     <section class="section" id="matrix">
       <div class="container">
-        <div class="section-header reveal-on-scroll">
+        <div class="section-header">
           <div class="section-tag">
-            <span class="svg-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="1" x2="7" y1="14" y2="14"/><line x1="9" x2="15" y1="8" y2="8"/><line x1="17" x2="23" y1="16" y2="16"/></svg>
+            <span class="svg-icon" style="width:15px;height:15px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/></svg>
             </span>
-            <span data-decrypted-text="Protocols & Limits">Protocols & Limits</span>
+            <span>Protocols & Ports Comparison</span>
           </div>
-          <h2 class="section-title">ตารางเปรียบเทียบโหมดการเชื่อมต่อ</h2>
-          <p class="section-desc">เปรียบเทียบความแตกต่างระหว่าง Port 465, Port 587 และ Direct Serverless Relay</p>
+          <h2 class="section-title">ตารางเปรียบเทียบโหมดการเชื่อมต่อและพอร์ต</h2>
+          <p class="section-desc">เปรียบเทียบข้อกำหนดทางเทคนิค ความปลอดภัย และความเข้ากันได้ระหว่าง Port 465, Port 587 และ REST Serverless Relay</p>
         </div>
 
-        <div class="tool-box spotlight-card reveal-on-scroll" style="padding:0; overflow:hidden;">
+        <div class="tool-box" style="padding:0; overflow:hidden;">
           <div class="table-responsive">
             <table class="custom-table">
               <thead>
                 <tr>
                   <th>พารามิเตอร์</th>
-                  <th>Port 465 (แนะนำสูงสุด ⭐)</th>
+                  <th>Port 465 (แนะนำสูงสุด [OK])</th>
                   <th>Port 587 (Alternative)</th>
-                  <th>Serverless Dynamic Relay (REST)</th>
+                  <th>Serverless REST Relay</th>
                 </tr>
               </thead>
               <tbody>
@@ -867,31 +974,31 @@
                   <td><strong>Protocol</strong></td>
                   <td>SMTPS (Implicit TLS Direct)</td>
                   <td>SMTP + STARTTLS Upgrade</td>
-                  <td>HTTPS REST + Native TLS SMTPS</td>
+                  <td>HTTPS REST ──► Native SMTPS</td>
                 </tr>
                 <tr>
                   <td><strong>ระดับความปลอดภัย</strong></td>
-                  <td><span style="color:var(--accent-emerald);">สูงสุด เข้ารหัสทันทีตั้งแต่ต้น</span></td>
-                  <td><span style="color:var(--accent-amber);">ปานกลาง เริ่มต้นแบบ Plaintext</span></td>
-                  <td><span style="color:var(--accent-emerald);">สูงสุด TLS 1.3 + Dynamic Secret Loading</span></td>
+                  <td><span style="color:var(--accent-emerald-light);">สูงสุด เข้ารหัส TLS ทันทีตั้งแต่ไบต์แรก</span></td>
+                  <td><span style="color:var(--accent-amber-light);">ปานกลาง เริ่มต้นแบบ Plaintext แล้วยกระดับ</span></td>
+                  <td><span style="color:var(--accent-emerald-light);">สูงสุด TLS 1.3 + Secret Isolation</span></td>
                 </tr>
                 <tr>
                   <td><strong>Authentication</strong></td>
-                  <td><code>AUTH LOGIN</code> (App Password)</td>
-                  <td><code>AUTH LOGIN</code> (App Password)</td>
-                  <td>Database `system_secrets` Fetching</td>
+                  <td><code>AUTH LOGIN</code> (16-char App Password)</td>
+                  <td><code>AUTH LOGIN</code> (16-char App Password)</td>
+                  <td>Backend Secret Environment Loading</td>
                 </tr>
                 <tr>
-                  <td><strong>Sending Limits</strong></td>
+                  <td><strong>โควตาการส่ง (Quotas)</strong></td>
                   <td>500 ฉบับ/วัน (Free) / 2,000 (Workspace)</td>
                   <td>500 ฉบับ/วัน (Free) / 2,000 (Workspace)</td>
-                  <td>500 - 2,000 ฉบับ/วัน (ต่อบัญชี SMTP)</td>
+                  <td>500 - 2,000 ฉบับ/วัน (ต่อ SMTP Account)</td>
                 </tr>
                 <tr>
                   <td><strong>Defender EOP Compliance</strong></td>
-                  <td><span style="color:var(--accent-emerald);">สมบูรณ์แบบ (เมื่อใช้ Zero-Credential)</span></td>
-                  <td><span style="color:var(--accent-emerald);">สมบูรณ์แบบ</span></td>
-                  <td><span style="color:var(--accent-emerald);">สมบูรณ์แบบ ป้องกัน Frontend Auth Fallback</span></td>
+                  <td><span style="color:var(--accent-emerald-light);">สมบูรณ์แบบ (เมื่อใช้ Zero-Credential)</span></td>
+                  <td><span style="color:var(--accent-emerald-light);">สมบูรณ์แบบ</span></td>
+                  <td><span style="color:var(--accent-emerald-light);">สมบูรณ์แบบ ป้องกัน Frontend Fallback</span></td>
                 </tr>
               </tbody>
             </table>
@@ -900,46 +1007,46 @@
       </div>
     </section>
 
-    <!-- Section: Documentation Hub -->
+    <!-- Section 9: References Bento Grid -->
     <section class="section" id="references">
       <div class="container">
-        <div class="section-header reveal-on-scroll">
+        <div class="section-header">
           <div class="section-tag">
-            <span class="svg-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <span class="svg-icon" style="width:15px;height:15px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
             </span>
-            <span data-decrypted-text="Knowledge Base & References">Knowledge Base & References</span>
+            <span>Knowledge Base & References</span>
           </div>
-          <h2 class="section-title">คลังเอกสารอ้างอิงเชิงลึก (References)</h2>
+          <h2 class="section-title">คลังเอกสารอ้างอิงเชิงลึก (Documentation Hub)</h2>
           <p class="section-desc">เข้าถึงคู่มือและเอกสารการตั้งค่าเชิงลึกทั้งหมดในคลังความรู้</p>
         </div>
 
-        <div class="bento-grid reveal-on-scroll">
-          <div class="bento-card spotlight-card tilted-card">
+        <div class="bento-grid">
+          <div class="bento-card">
             <div class="card-icon icon-blue">
-              <span class="svg-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg></span>
+              <span class="svg-icon" style="width:24px;height:24px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/></svg></span>
             </div>
             <h3 class="card-title">M365 Delivery Guide</h3>
             <p class="card-desc">เจาะลึกปัญหา Exchange Online Protection (EOP), Defender SCL 9 Phishing Quarantine, Transport Rules และการคอนฟิก PowerShell</p>
-            <a href="https://github.com/bearnannan/SKILL-gmail-smtp/blob/main/references/m365-group-delivery.md" target="_blank" class="btn btn-secondary btn-magnet" style="margin-top:auto;">อ่านคู่มือฉบับเต็ม</a>
+            <a href="https://github.com/bearnannan/SKILL-gmail-smtp/blob/main/references/m365-group-delivery.md" target="_blank" class="btn btn-secondary" style="margin-top:auto;">อ่านคู่มือฉบับเต็ม</a>
           </div>
 
-          <div class="bento-card spotlight-card tilted-card">
+          <div class="bento-card">
             <div class="card-icon icon-emerald">
-              <span class="svg-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></span>
+              <span class="svg-icon" style="width:24px;height:24px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></span>
             </div>
             <h3 class="card-title">Anti-Spam Checklist</h3>
-            <p class="card-desc">คู่มือเกณฑ์ผู้ส่งของ Google & Yahoo 2024+, การตั้งค่า SPF/DKIM/DMARC และการควบคุม Spam Rate ต่ำกว่า 0.3%</p>
-            <a href="https://github.com/bearnannan/SKILL-gmail-smtp/blob/main/references/anti-spam-deliverability.md" target="_blank" class="btn btn-secondary btn-magnet" style="margin-top:auto;">อ่านคู่มือฉบับเต็ม</a>
+            <p class="card-desc">คู่มือเกณฑ์ผู้ส่งของ Google & Yahoo, การตั้งค่า SPF/DKIM/DMARC, Header Hygiene และการควบคุม Spam Rate ต่ำกว่า 0.3%</p>
+            <a href="https://github.com/bearnannan/SKILL-gmail-smtp/blob/main/references/anti-spam-deliverability.md" target="_blank" class="btn btn-secondary" style="margin-top:auto;">อ่านคู่มือฉบับเต็ม</a>
           </div>
 
-          <div class="bento-card spotlight-card tilted-card">
+          <div class="bento-card">
             <div class="card-icon icon-amber">
-              <span class="svg-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></span>
+              <span class="svg-icon" style="width:24px;height:24px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></span>
             </div>
             <h3 class="card-title">Gmail SMTP Details</h3>
             <p class="card-desc">รายละเอียดเทคนิค SMTP Protocol, Response Code Map (250, 354, 421, 535, 550) และ Sending Quotas</p>
-            <a href="https://github.com/bearnannan/SKILL-gmail-smtp/blob/main/references/gmail-smtp-config.md" target="_blank" class="btn btn-secondary btn-magnet" style="margin-top:auto;">อ่านคู่มือฉบับเต็ม</a>
+            <a href="https://github.com/bearnannan/SKILL-gmail-smtp/blob/main/references/gmail-smtp-config.md" target="_blank" class="btn btn-secondary" style="margin-top:auto;">อ่านคู่มือฉบับเต็ม</a>
           </div>
         </div>
       </div>
@@ -951,12 +1058,13 @@
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <div class="brand-name" style="font-size:1.2rem;">Gmail SMTP & Enterprise Deliverability Suite</div>
-          <p>ชุดเครื่องมือและสถาปัตยกรรม Native TLS สำหรับการส่งอีเมลผ่าน Gmail SMTP และเพิ่มความพร้อมในการส่งเข้า Microsoft 365 Groups & Corporate Inboxes ตามมาตรฐาน RFC และ EOP Defender สากล</p>
+          <div class="brand-name" style="font-size:1.15rem;">Gmail SMTP & Enterprise Deliverability Suite</div>
+          <p>ชุดเครื่องมือและรันบุ๊กสำหรับการส่งอีเมลผ่าน Gmail SMTP และเพิ่มความพร้อมในการส่งเข้า Microsoft 365 Groups & Corporate Inboxes ตามมาตรฐาน RFC และ EOP Defender สากล</p>
         </div>
         <div class="footer-col">
           <h4>Interactive Tools</h4>
           <ul class="footer-links">
+            <li><a href="#architecture">Pipeline Inspector</a></li>
             <li><a href="#encoder">RFC 2047 Live Encoder</a></li>
             <li><a href="#m365">M365 PowerShell Generator</a></li>
             <li><a href="#template">Zero-Credential Template</a></li>
@@ -969,15 +1077,16 @@
           <h4>Skill Resources</h4>
           <ul class="footer-links">
             <li><a href="https://github.com/bearnannan/SKILL-gmail-smtp" target="_blank">GitHub Repository</a></li>
-            <li><a href="https://github.com/bearnannan/SKILL-gmail-smtp/blob/main/SKILL.md" target="_blank">SKILL.md Instructions</a></li>
-            <li><a href="https://github.com/bearnannan/SKILL-gmail-smtp/blob/main/README.md" target="_blank">README.md Runbook</a></li>
+            <li><a href="https://github.com/bearnannan/SKILL-gmail-smtp/blob/main/SKILL.md" target="_blank">SKILL.md Runbook</a></li>
+            <li><a href="https://github.com/bearnannan/SKILL-gmail-smtp/blob/main/README.md" target="_blank">README.md Guide</a></li>
+            <li><a href="https://github.com/bearnannan/SKILL-gmail-smtp/blob/main/EMAIL_DELIVERY_COMPREHENSIVE_INCIDENT_REPORT.md" target="_blank">Incident Report (Case Study)</a></li>
           </ul>
         </div>
       </div>
 
       <div class="footer-bottom">
         <div>© 2026 Gmail SMTP Skill. Released under MIT License.</div>
-        <div>Designed with React Bits UI Architecture (Zero-Build Pure ES Modules)</div>
+        <div>Built with ReactBits Design System & Vanilla Web Standards</div>
       </div>
     </div>
   </footer>
