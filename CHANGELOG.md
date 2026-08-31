@@ -1,5 +1,15 @@
 # Changelog
 
+## [2026-08-31 23:00]
+- **Files Modified:** `SKILL.md`, `CHANGELOG.md`
+- **Changes:** Added explicit SMTP probe guidance, `550 5.7.x` policy handling, DBEB/header examples (`X-Priority`, `X-Entity-Ref-ID`, DSN), and corrected the email-client layout width guidance.
+- **Reason:** Tighten reusable prevention steps from both email-delivery incident reports.
+
+## [2026-08-31]
+- **Files Modified:** `SKILL.md`, `CHANGELOG.md`
+- **Changes:** ปรับปรุง `SKILL.md` ให้เป็น runbook กระชับสำหรับแยกปัญหา routing, SMTP, recipient, rendering และ Inbox placement พร้อมเพิ่มแนวทาง header hygiene, domain authentication, zero-credential exposure, template consistency และ operational closure
+- **Reason:** นำผล RCA จาก `EMAIL_DELIVERY_INCIDENT_REPORT.md` มาป้องกันปัญหา 404 route, template mismatch, Outlook Junk placement และการสรุปสาเหตุเกินหลักฐานในอนาคต
+
 ## [2026-08-31 22:40]
 - **Files Modified:** landing-page/, index.html, README.md, CHANGELOG.md
 - **Changes:**
