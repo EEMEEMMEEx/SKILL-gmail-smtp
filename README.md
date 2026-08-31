@@ -1,300 +1,112 @@
-<div align="center">
+# Gmail SMTP & Enterprise Email Deliverability
 
-# Gmail SMTP & Enterprise Email Deliverability Runbook
+คู่มือและเครื่องมือสำหรับส่งอีเมลธุรกรรมผ่าน Gmail SMTP ไปยัง Gmail, Microsoft 365 และกล่องจดหมายองค์กร พร้อมแนวทางวินิจฉัย NDR, Spam/Quarantine, Header Hygiene และ Zero-Credential Exposure
 
-**Production-grade Gmail SMTP configuration, Microsoft 365 Groups & Corporate Inboxes Delivery, Defender Anti-Phishing Guard, and Anti-Spam Inbox Optimization.**
+> **ขอบเขตความปลอดภัย:** เอกสารนี้ไม่รับรอง Inbox placement 100% และไม่แนะนำให้ปิดตัวกรองหรือสร้าง bypass rule เพื่อให้การทดสอบผ่าน การเปลี่ยน policy ของ Microsoft 365 ต้องให้ Exchange Administrator อนุมัติอย่างชัดเจน
 
-[![Gmail SMTP](https://img.shields.io/badge/Gmail-SMTP%20Port%20465%20%2F%20587-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](https://smtp.gmail.com)
-[![Microsoft 365](https://img.shields.io/badge/Microsoft%20365-EOP%20%26%20Defender%20Ready-0078D4?style=for-the-badge&logo=microsoftoutlook&logoColor=white)](https://admin.exchange.microsoft.com)
-[![RFC Compliant](https://img.shields.io/badge/RFC-5321%20%7C%205322%20%7C%202047-10B981?style=for-the-badge)](https://tools.ietf.org/html/rfc5322)
-[![Serverless Dispatcher](https://img.shields.io/badge/Serverless-Dynamic%20DB%20Config-000000?style=for-the-badge&logo=vercel&logoColor=white)](#สถาปัตยกรรม-serverless-dispatcher--dynamic-smtp-configuration)
-[![Node.js Native](https://img.shields.io/badge/Node.js-Native%20TLS-339933?style=for-the-badge&logo=node.js&logoColor=white)](./examples/smtp-send-example.js)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](#license)
+## เริ่มต้นอย่างรวดเร็ว
 
-<br/>
+1. เปิด 2-Step Verification และสร้าง [Google App Password](https://myaccount.google.com/apppasswords) สำหรับบัญชีผู้ส่ง ใช้ App Password เท่านั้น ไม่ใช้รหัสผ่านบัญชีจริง
+2. ตั้งค่า SMTP ใน secret manager หรือ environment ของ backend (ห้าม commit ค่าเหล่านี้):
 
-[เริ่มต้นใช้งาน (Quick Start)](#การตั้งค่าเริ่มต้นอย่างรวดเร็ว-quick-start) •
-[Enterprise M365 & Corporate Inboxes](#การแก้ไขปัญหาและการส่งเข้า-microsoft-365--corporate-inboxes) •
-[Serverless Architecture](#สถาปัตยกรรม-serverless-dispatcher--dynamic-smtp-configuration) •
-[Anti-Spam Checklist](#กฎเหล็กป้องกันอีเมลตก-spam--junk-mail) •
-[Interactive Web Tools](#ชุดเครื่องมือปฏิบัติการบนเว็บ-interactive-web-tools) •
-[โค้ดตัวอย่าง](#การรันตัวอย่างสคริปต์-code-implementation) •
-[เอกสารอ้างอิง](#เอกสารอ้างอิงเชิงลึก-references)
+   ```ini
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=465
+   SMTP_SECURE=true
+   SMTP_USER=sender@gmail.com
+   SMTP_PASS=<16-character-app-password>
+   ```
 
-</div>
+3. ใช้ `smtp.gmail.com:465` สำหรับ implicit TLS หรือ port `587` พร้อม STARTTLS ที่บังคับใช้ TLS
+4. ทดลองส่งจาก [ตัวอย่าง Native TLS](./examples/smtp-send-example.js):
 
----
+   ```bash
+   node examples/smtp-send-example.js
+   ```
 
-## <img src="./assets/icons/server.svg" width="20" height="20" align="absmiddle" /> แผนผังการทำงาน (Architecture & Delivery Pipeline)
+ตัวอย่างจะสร้าง `multipart/alternative`, RFC 2047 headers และ `Message-ID` ใหม่ต่อฉบับ อย่าใส่ credential จริงใน source, terminal transcript หรือ issue tracker
 
-```text
-┌────────────────────────────────────────────────────────────────────────┐
-│                   Frontend & Static Web App                            │
-│  - GitHub Pages / Vercel Web Client (เรียก Absolute API URL)           │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │ POST JSON
-                                    ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│              Serverless Dispatcher (/api/send-email)                   │
-│  - Real-time Config Fetch: Supabase `system_settings` / `system_secrets`│
-│  - Zero-Credential Template & RFC 2047 Base64 Encoding                 │
-│  - RFC 5322 Clean Headers (No X-Mailer / No Bot Anomaly Triggers)      │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │ SMTPS (Implicit TLS Port 465) / AUTH LOGIN
-                                    ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                         Google Gmail SMTP Gateway                      │
-│  - SPF Alignment & Google DKIM Signature Auto-Signing                  │
-│  - Reputation Guard & Rate Throttling                                  │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │ Transport
-                  ┌─────────────────┴─────────────────┐
-                  ▼                                   ▼
-┌───────────────────────────────────┐   ┌────────────────────────────────┐
-│   General Inboxes (Gmail/Yahoo)   │   │  Microsoft 365 / Exchange EOP  │
-│  - 100% Inbox Placement           │   │  - SCL 0 (Bypasses Quarantine) │
-│  - Clean Header Compliance        │   │  - External Sender Permitted   │
-│  - RFC 2047 Thai Subject Display  │   │  - Auto-Subscribe Members      │
-└───────────────────────────────────┘   └────────────────────────────────┘
-```
-
----
-
-## <img src="./assets/icons/sliders.svg" width="20" height="20" align="absmiddle" /> ตารางเปรียบเทียบโหมดการเชื่อมต่อ (Connection Matrix)
-
-| พารามิเตอร์ | Port 465 (แนะนำสูงสุด / Recommended ⭐) | Port 587 (Alternative) | Serverless Dynamic Relay (REST) |
-|---|---|---|---|
-| **Protocol** | SMTPS (Implicit TLS Direct) | SMTP + STARTTLS Upgrade | HTTPS REST + Native SMTPS |
-| **ความปลอดภัย** | เข้ารหัสทันทีตั้งแต่ handshake | เริ่มต้นแบบ Plaintext ก่อน Upgrade | TLS 1.3 + Dynamic Secret Loading |
-| **Authentication** | `AUTH LOGIN` / `AUTH PLAIN` | `AUTH LOGIN` / `AUTH PLAIN` | Database `system_secrets` Fetching |
-| **Sending Limits** | 500 ฉบับ/วัน (Free) / 2,000 (Workspace) | 500 ฉบับ/วัน (Free) / 2,000 (Workspace) | 500 - 2,000 ฉบับ/วัน (ต่อบัญชี SMTP) |
-| **Defender Compliance** | สมบูรณ์แบบ (เมื่อใช้ Zero-Credential) | สมบูรณ์แบบ | สมบูรณ์แบบ ป้องกัน Frontend Auth Fallback |
-| **ความเสี่ยง MitM** | ต่ำมาก (TLS Direct) | ปานกลาง (อาจเกิด STARTTLS Stripping) | ต่ำมาก |
-
----
-
-## <img src="./assets/icons/terminal.svg" width="20" height="20" align="absmiddle" /> การตั้งค่าเริ่มต้นอย่างรวดเร็ว (Quick Start)
-
-### 1. การสร้าง Google App Password (รหัสผ่านเฉพาะแอป)
-> [!IMPORTANT]
-> Google ไม่อนุญาตให้ใช้รหัสผ่านบัญชีจริง (Less Secure Apps ถูกปิดใช้งานถาวร) ต้องใช้ **App Password 16 หลัก** เท่านั้น
-
-1. เปิด **2-Step Verification** ที่ [Google Account Security](https://myaccount.google.com/security)
-2. เข้าไปที่เมนู [Google App Passwords](https://myaccount.google.com/apppasswords)
-3. กำหนดชื่อแอปพลิเคชัน เช่น `Email-Engine-Production`
-4. คัดลอกรหัสผ่าน 16 หลัก (เช่น `abcd efgh ijkl mnop` นำช่องว่างออกเมื่อนำไปใช้)
-
-### 2. ข้อมูล Connection Parameters มาตรฐาน
-```ini
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=465
-SMTP_SECURE=true
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=abcdefghijklmnop
-```
-
----
-
-## <img src="./assets/icons/building.svg" width="20" height="20" align="absmiddle" /> การแก้ไขปัญหาและการส่งเข้า Microsoft 365 & Corporate Inboxes
-
-เมื่อส่งอีเมลจาก Gmail SMTP (`@gmail.com`) ไปยังโดเมนองค์กรหรือ Microsoft 365 (เช่น `@yourdomain.com`, `@company.com` หรือ M365 Groups) ต้องปฏิบัติตามมาตรฐานระดับ Enterprise ดังนี้:
-
-### 1. กฎเหล็กป้องกัน Defender ตรวจจับเป็น High-Confidence Phishing (SCL 9 Quarantine)
-* **พฤติกรรมของ Defender for Office 365 (EOP):** เมื่อได้รับอีเมลจากผู้ส่งภายนอก (`@gmail.com`) ที่มี Plaintext Password, รหัสผ่านตั้งต้น (`Initial Access`), หรือคำว่า `รหัสผ่านชั่วคราว` คู่กับลิงก์เข้าสู่ระบบ (`Log in / Sign in`) บนโดเมนภายนอก ระบบจะระบุว่าเป็นการโจมตีประเภท **Credential Harvesting / Phishing Attack**
-* **ผลกระทบ:** EOP จะจัดอีเมลเป็น **High-Confidence Phishing (SCL 9)** และส่งเข้า **Admin Quarantine โดยตรง** ทำให้ผู้รับไม่เห็นอีเมลแม้แต่ในโฟลเดอร์ Junk Mail!
-* **แนวทางแก้ไข (Zero-Credential Policy):** ออกแบบเทมเพลตเป็น **Clean Administrative Notification** แจ้งเฉพาะข้อมูลผู้ใช้ (ชื่อ, อีเมล, สิทธิ์, แผนก) และปุ่มเข้าสู่ระบบ โดยให้ผู้ใช้ใช้รหัสผ่านองค์กรหรือติดต่อ Admin แยกต่างหาก
-
-```html
-<!-- ตัวอย่าง Clean Administrative Notification Template ปลอดภัย 100% -->
-<table role="presentation" width="100%" style="max-width:580px; background-color:#ffffff; font-family:'Sarabun', Arial, sans-serif;">
-  <tr><td style="padding:24px;">
-    <h2>แจ้งข้อมูลบัญชีผู้ใช้งานระบบ (Enterprise System Notification)</h2>
-    <p>เรียน คุณ สมชาย ใจดี,</p>
-    <p>ผู้ดูแลระบบได้สร้างและเปิดสิทธิ์การใช้งานสำหรับบัญชีของคุณเรียบร้อยแล้ว</p>
-    <table style="background-color:#f8fafc; border:1px solid #e2e8f0; width:100%; padding:12px; margin:16px 0;">
-      <tr><td>ชื่อ-สกุล:</td><td><strong>สมชาย ใจดี</strong></td></tr>
-      <tr><td>อีเมล:</td><td><strong>somchai@company.com</strong></td></tr>
-      <tr><td>บทบาท (Role):</td><td><strong>Operator</strong></td></tr>
-    </table>
-    <div style="text-align:center; margin:20px 0;">
-      <a href="https://app.yourdomain.com" style="background-color:#2563eb; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px;">เข้าสู่ระบบเพื่อเริ่มใช้งาน</a>
-    </div>
-    <p style="font-size:0.8rem; color:#64748b; border-top:1px dashed #e2e8f0; padding-top:10px;">
-      * เพื่อความปลอดภัยสูงสุด ระบบจะไม่มีการระบุรหัสผ่านในอีเมล โปรดใช้รหัสผ่านตั้งต้นขององค์กร
-    </p>
-  </td></tr>
-</table>
-```
-
-### 2. ชุดคำสั่ง Exchange Online PowerShell Suite
-```powershell
-# เชื่อมต่อ Exchange Online ในฐานะ Admin
-Connect-ExchangeOnline -UserPrincipalName admin@yourdomain.com
-
-# โหมด 1: สำหรับ Modern Microsoft 365 Unified Group
-# ปลดบล็อกผู้ส่งภายนอก (แก้ 550 5.7.133 NDR) + เปิด Auto-Subscribe ให้เด้งเข้า Inbox สมาชิก
-Set-UnifiedGroup -Identity "group-name@yourdomain.com" `
-  -RequireSenderAuthenticationEnabled $false `
-  -AutoSubscribeNewMembers $true
-
-# โหมด 2: สำหรับ Classic Distribution Group (DL)
-Set-DistributionGroup -Identity "dl-name@yourdomain.com" `
-  -RequireSenderAuthenticationEnabled $false
-
-# โหมด 3: Mail Flow Rule (Bypass Spam / ตั้งค่า SCL -1 สำหรับอีเมลระบบแจ้งเตือน)
-New-TransportRule -Name "Bypass Spam for App Notifications" `
-  -SenderAddressMatchesPatterns "app.noreply.mailer@gmail.com" `
-  -SetSCL -1 `
-  -State Enabled `
-  -Comments "Allow external Gmail SMTP notifications without Defender quarantine"
-```
-
-### 3. การตัด Custom Headers ที่กระตุ้น Bot Anomaly Heuristics
-> [!WARNING]
-> ห้ามใส่ Header ต่อไปนี้ เพราะระบบ EOP จะมองว่าเป็น Script Anomaly หรือตัดการ forward เข้า Inbox สมาชิก:
-- <img src="./assets/icons/x.svg" width="14" height="14" align="absmiddle" /> **ห้ามใช้** `Auto-Submitted: auto-generated` *(ทำให้ M365 ข้ามการ forward เข้า mailbox สมาชิก)*
-- <img src="./assets/icons/x.svg" width="14" height="14" align="absmiddle" /> **ห้ามใช้** `Precedence: bulk` หรือ `Precedence: list`
-- <img src="./assets/icons/x.svg" width="14" height="14" align="absmiddle" /> **ห้ามใช้** `X-Mailer`, `X-Priority`, `X-Entity-Ref-ID`
-- <img src="./assets/icons/check.svg" width="14" height="14" align="absmiddle" /> **ใช้เฉพาะ Header มาตรฐาน:** `Date`, `From`, `To`, `Subject`, `Message-ID`, `Reply-To`, `Content-Language: th`, `MIME-Version: 1.0`
-
----
-
-## <img src="./assets/icons/server.svg" width="20" height="20" align="absmiddle" /> สถาปัตยกรรม Serverless Dispatcher & Dynamic SMTP Configuration
-
-เมื่อพัฒนา Web Application แบบ Hybrid (Frontend อยู่บน GitHub Pages หรือ Vercel และ Database อยู่บน Supabase):
-
-1. **Endpoint Auto-Routing (ป้องกัน 404 & Silent Auth Fallback):**
-   - Frontend ที่เป็น Single Page Application (SPA) บน GitHub Pages ต้องเรียก API ด้วย **Absolute Serverless URL** (เช่น `https://api.yourdomain.com/api/send-email`)
-   - ป้องกันปัญหาการเรียก Relative Path `/api/send-email` บน Static Hosting แล้วเกิด HTTP 404 ซึ่งจะทำให้โค้ด Frontend ตกไปทำงานใน Third-party Auth Fallback (ส่งอีเมลรีเซ็ตรหัสผ่านภาษาอังกฤษออกมาแทน)
-2. **Dynamic Database Config Loading:**
-   - API Serverless Dispatcher จะเชื่อมต่อไปยัง Supabase (`system_settings` และ `system_secrets`) เพื่อดึงค่า `smtp_config` และ `smtp_password` แบบ Real-time ทุกครั้งที่ส่ง
-   - ทำให้เมื่อผู้ดูแลระบบเปลี่ยนรหัสผ่าน App Password หรือแก้ไขอีเมลผู้ส่งบน Web UI การตั้งค่าจะมีผลทันทีโดยไม่ต้อง Build หรือ Redeploy โค้ดใหม่
-
-```javascript
-// ตัวอย่าง Serverless Dispatcher Handler (api/send-email.js)
-import { createClient } from '@supabase/supabase-js';
-import { sendEmail } from '../lib/smtp-native.js';
-
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
-  try {
-    const { data: config } = await supabase.from('system_settings').select('value').eq('key', 'smtp_config').single();
-    const { data: secret } = await supabase.from('system_secrets').select('value').eq('key', 'smtp_password').single();
-    const { toEmail, subject, textContent, htmlContent } = req.body;
-
-    await sendEmail({
-      user: config.value.user,
-      pass: secret.value.password,
-      fromEmail: config.value.from_email,
-      fromName: config.value.from_name,
-      toEmail,
-      subject,
-      textContent,
-      htmlContent
-    });
-
-    return res.status(200).json({ success: true, message: 'Delivered to corporate mailbox' });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-}
-```
-
----
-
-## <img src="./assets/icons/shield-check.svg" width="20" height="20" align="absmiddle" /> กฎเหล็กป้องกันอีเมลตก Spam / Junk Mail
-
-| หมวดหมู่ | ข้อกำหนดสำคัญและวิธีปฏิบัติ |
-|---|---|
-| <img src="./assets/icons/lock.svg" width="16" height="16" align="absmiddle" /> **Authentication** | Envelope From (`MAIL FROM`) และ Header `From:` ต้องตรงกัน เพื่อให้ Google เซ็น DKIM สมบูรณ์ |
-| <img src="./assets/icons/globe.svg" width="16" height="16" align="absmiddle" /> **Thai Encoding** | Subject และ Sender Name ที่มีภาษาไทย ต้อง encode ผ่าน RFC 2047 (`=?UTF-8?B?...?=`) เท่านั้น |
-| <img src="./assets/icons/layers.svg" width="16" height="16" align="absmiddle" /> **MIME Structure** | ต้องมีโครงสร้าง `multipart/alternative` ที่บรรจุทั้ง `text/plain` และ `text/html` เสมอ |
-| <img src="./assets/icons/shield-check.svg" width="16" height="16" align="absmiddle" /> **Zero-Credential** | ห้ามระบุรหัสผ่านจริงหรือคำล่อแหลมในเนื้อหา ป้องกัน Defender กักกันเป็น Phishing (SCL 9) |
-| <img src="./assets/icons/tag.svg" width="16" height="16" align="absmiddle" /> **Clean Headers** | มี `Date`, `Message-ID`, `Content-Language: th`, `MIME-Version: 1.0` และไม่มี `X-Mailer` |
-| <img src="./assets/icons/code.svg" width="16" height="16" align="absmiddle" /> **HTML Hygiene** | ใช้ Table-based layout, Inline CSS 100%, ห้ามมี `<script>`, `<iframe>`, หรือ `<form>` |
-| <img src="./assets/icons/sliders.svg" width="16" height="16" align="absmiddle" /> **Link Hygiene** | ลิงก์ปลายทางต้องเป็น `https://` ปลอดภัย, **ห้ามใช้ URL Shorteners** (bit.ly, tinyurl) และห้ามใช้ Raw IP |
-| <img src="./assets/icons/terminal.svg" width="16" height="16" align="absmiddle" /> **Throttling** | มีระบบหน่วงเวลาส่งระหว่างฉบับอย่างน้อย 500ms - 1000ms เพื่อป้องกัน Rate Limit |
-
----
-
-## <img src="./assets/icons/layout.svg" width="20" height="20" align="absmiddle" /> ชุดเครื่องมือปฏิบัติการบนเว็บ (Interactive Web Tools)
-
-โปรเจกต์นี้มาพร้อมกับ Web Interactive Suite ในตัว (`index.html`) รองรับการทำงานแบบ Zero-Build:
-
-1. 🛠️ **RFC 2047 Thai Header Live Encoder:** เครื่องมือทดสอบแปลงหัวข้ออีเมลและชื่อผู้ส่งภาษาไทยเป็น Base64 MIME Header แบบเรียลไทม์
-2. 🏢 **Enterprise M365 PowerShell Generator:** สร้างสคริปต์ Exchange Online สำหรับ Unified Group, Distribution Group และ Mail Flow Rule
-3. ✉️ **Zero-Credential Template Generator & Live Preview:** ออกแบบเทมเพลตแจ้งเปิดสิทธิ์บัญชีผู้ใช้พร้อมจำลองการแสดงผลบน Outlook Web และสร้างโค้ด HTML มาตรฐาน
-4. 📊 **Anti-Spam & EOP Deliverability Score Calculator:** คำนวณความพร้อมและคะแนน Deliverability ตามเกณฑ์ Google/Yahoo 2024+ และ Defender Heuristics
-5. 🔍 **Corporate Inboxes Troubleshooting Hub:** รวม 4 กรณีศึกษาจริง เช่น ปัญหาอีเมลหายไปจาก Outlook, NDR 550 5.7.133, และ Frontend Auth Fallback
-6. ⚡ **Production Code Generator:** สร้างโค้ดส่งอีเมลพร้อมใช้ใน 4 สถาปัตยกรรม (Native Node.js, Serverless Dispatcher, Nodemailer, Python)
-
----
-
-## <img src="./assets/icons/code.svg" width="20" height="20" align="absmiddle" /> การรันตัวอย่างสคริปต์ (Code Implementation)
-
-โค้ดตัวอย่าง Native TLS Client แบบไม่พึ่งพาภายนอก (Zero External Dependencies) อยู่ที่ [`examples/smtp-send-example.js`](./examples/smtp-send-example.js)
-
-```javascript
-import { sendEmail } from './examples/smtp-send-example.js';
-
-await sendEmail({
-  user: 'sender@gmail.com',
-  pass: 'your-16-char-app-password',
-  fromEmail: 'sender@gmail.com',
-  fromName: 'ระบบแจ้งเตือนอัตโนมัติ',
-  toEmail: 'somchai@company.com',
-  subject: 'แจ้งข้อมูลบัญชีผู้ใช้งานระบบ',
-  textContent: 'สวัสดีครับ ผู้ดูแลระบบได้สร้างและเปิดสิทธิ์การใช้งานสำหรับคุณเรียบร้อยแล้ว',
-  htmlContent: '<h2 style="color:#2563EB;">แจ้งเปิดสิทธิ์การใช้งาน</h2><p>กรุณาเข้าสู่ระบบผ่านลิงก์ขององค์กร</p>'
-});
-```
-
-### การทดสอบรันสคริปต์
-```bash
-node examples/smtp-send-example.js
-```
-
----
-
-## <img src="./assets/icons/folder-tree.svg" width="20" height="20" align="absmiddle" /> โครงสร้างโปรเจกต์ (Project Structure)
+## สถาปัตยกรรมที่แนะนำ
 
 ```text
-gmail-smtp/
-├── .github/
-│   └── workflows/
-│       └── deploy-pages.yml                    # Automated GitHub Pages Deployment Workflow
-├── .gitignore                                  # กรองไฟล์ node_modules และ credential ชั่วคราว
-├── SKILL.md                                    # Core Skill Instructions สำหรับ AI Assistant
-├── README.md                                   # Production-ready Documentation & Runbook
-├── index.html                                  # Interactive Web Suite & Diagnostic Playground
-├── styles.css                                  # UI/UX Pro Max Dark Slate Theme & Responsive CSS
-├── app.js                                      # Pure Vanilla Engine (Encoders, Generators, Calculator)
-├── assets/
-│   └── icons/                                  # Pure SVG Icons (UI/UX Pro Max)
-│       ├── mail.svg, server.svg, sliders.svg
-│       ├── building.svg, shield-check.svg
-│       └── ...
-├── components/                                 # WebGL Shader Atmosphere (AcidSquares, Strands)
-├── examples/
-│   └── smtp-send-example.js                    # Native TLS Implementation with Thai RFC 2047
-└── references/
-    ├── anti-spam-deliverability.md             # RFC Standards, SPF/DKIM/DMARC, Google/Yahoo 2024 Rules
-    ├── gmail-smtp-config.md                    # TLS 1.3, SMTPS Port 465 vs 587, Error Code Map
-    └── m365-group-delivery.md                  # M365 EOP, Defender Phishing Quarantine, PowerShell Runbook
+Frontend / Static site
+        │ HTTPS (absolute API URL)
+        ▼
+Backend or Serverless Dispatcher
+  ├─ reads SMTP config/secret server-side
+  ├─ renders clean, zero-credential content
+  └─ records sanitized provider message ID
+        │ SMTPS 465 or STARTTLS 587
+        ▼
+Gmail SMTP ── downstream delivery ──► Gmail / M365 EOP / corporate inbox
 ```
 
----
+Static frontend ต้องเรียก endpoint ของ dispatcher แบบ absolute URL; relative `/api/send-email` บน static hosting อาจได้ `404` และตกไปใช้ auth-email fallback ที่ไม่เกี่ยวข้อง
 
-## <img src="./assets/icons/book-open.svg" width="20" height="20" align="absmiddle" /> เอกสารอ้างอิงเชิงลึก (References)
+## Troubleshooting: แยกจุดที่ล้มเหลว
 
-- <img src="./assets/icons/file-text.svg" width="15" height="15" align="absmiddle" /> [Microsoft 365 & Corporate Inbox Delivery Guide](./references/m365-group-delivery.md) — วิเคราะห์เจาะลึกปัญหา Defender Phishing Quarantine (SCL 9), NDR 550, Transport Rules และการคอนฟิก Exchange Online
-- <img src="./assets/icons/file-text.svg" width="15" height="15" align="absmiddle" /> [Anti-Spam & Deliverability Checklist](./references/anti-spam-deliverability.md) — คู่มือข้อกำหนดผู้ส่งของ Google & Yahoo (2024+ Requirements) และการปรับแต่ง Content Scoring
-- <img src="./assets/icons/file-text.svg" width="15" height="15" align="absmiddle" /> [Gmail SMTP Technical Details](./references/gmail-smtp-config.md) — คู่มือเทคนิค SMTP Protocol, Response Codes (250, 354, 421, 535, 550) และ Rate Limits
+`250 2.0.0 Accepted for delivery` หมายถึง Gmail รับเข้าคิวเท่านั้น ไม่ใช่หลักฐานว่าเข้า Inbox แล้ว ให้เก็บเวลา, ผู้รับ, envelope/header `From`, provider message ID, SMTP response, NDR และ received headers โดยลบข้อมูลลับก่อนแชร์
 
----
+| สัญญาณ | สาเหตุที่พบบ่อย | การดำเนินการ |
+|---|---|---|
+| `550 5.4.1 Recipient address rejected: Access denied` จาก M365/EOP | DBEB ไม่พบผู้รับ, ผู้รับถูกปิด หรือไม่ใช่ alias ที่รับได้ | ตรวจสอบ mailbox/alias ที่มีอยู่จริงใน Entra ID กับผู้ดูแลปลายทาง แก้ address หรือ provision ก่อนส่งใหม่ |
+| `550 5.1.1` | Hard bounce: mailbox ไม่มีอยู่ | suppress address จนกว่าจะแก้ไข ห้าม retry ซ้ำ |
+| `550 5.7.133` | M365 Group ไม่รับ external sender | ให้ Exchange Admin ตรวจสอบความจำเป็นและเปลี่ยน setting เฉพาะเมื่อได้รับอนุมัติ |
+| `421`, `451`, `452` | throttle หรือปัญหาชั่วคราว | queue + bounded exponential backoff และหยุดเมื่อครบ retry limit |
+| `535` หรือ `EAUTH` | App Password ผิด/ถูก revoke หรือ policy ไม่อนุญาต SMTP auth | ตรวจเฉพาะค่าที่ไม่ลับ หมุน credential ผ่าน secret store และทดสอบกับผู้รับควบคุม |
+| Accepted แต่ไม่พบใน Inbox/Junk | Quarantine, reputation, content/header หรือ group subscription | ตรวจ message trace/quarantine และ received headers กับผู้ดูแล tenant |
 
-## <img src="./assets/icons/file-text.svg" width="20" height="20" align="absmiddle" /> License
+## กฎ Deliverability ที่ต้องรักษา
+
+- Envelope sender และ header `From` ต้องเป็น identity ที่ authenticate และได้รับอนุญาตให้ส่ง ตรวจ SPF, DKIM และ DMARC alignment
+- ให้ mail library สร้าง `Date`, unique `Message-ID`, MIME boundary และ RFC 2047 encoding; ใช้ `multipart/alternative` ที่มีทั้ง `text/plain` และ `text/html`
+- ใช้เฉพาะ metadata ที่จำเป็น เช่น `Reply-To`, `Content-Language: th`, `MIME-Version: 1.0`; หลีกเลี่ยง custom `X-*`, `X-Mailer`, `X-Priority`, `X-Entity-Ref-ID`, `Auto-Submitted: auto-generated`, `Precedence: bulk` และ DSN ที่ไม่จำเป็น
+- HTML ใช้ table layout + inline CSS, ไม่มี script/form/iframe; ทุกลิงก์เป็น HTTPS และปลายทางต้องตรงกับข้อความ ห้าม raw IP และ URL shortener
+- validate/deduplicate ผู้รับ, suppress hard bounce, throttle และ warm up sender ใหม่; ติดตาม bounce, complaint, deferral และ quarantine
+
+## Zero-Credential Exposure
+
+ห้ามส่ง password, temporary password, App Password, API key, recovery code หรือ reusable authentication token ในอีเมล การส่ง password คู่กับ sign-in link จาก external sender อาจถูก Defender จัดเป็น High-Confidence Phishing (SCL 9) และกักกันโดยไม่แสดงใน Junk
+
+Invitation ควรมีเพียง identity/role และลิงก์ไปยังแอปทางการ หากต้องตั้งรหัสผ่าน ให้ใช้ identity-provider activation, password-reset หรือ single-use magic link ที่หมดอายุและ audit ได้ ห้ามใส่ token ใน log หรือ ticket
+
+## Microsoft 365 และ Group delivery
+
+- ตรวจสอบว่าผู้รับถูกสร้างและ active ใน Microsoft 365/Google Workspace ก่อนส่ง อีเมลที่มีรูปแบบถูกต้องไม่ได้แปลว่ามี mailbox จริง
+- แยก “เข้า Group mailbox” ออกจาก “กระจายเข้า Inbox สมาชิก” โดยตรวจ external-sender และ subscription settings กับ Exchange Admin
+- ห้ามเปิด external senders, ตั้ง SCL bypass หรือ ลดการป้องกัน phishing เพื่อแก้การทดสอบชั่วคราว หากจำเป็นต้องเปลี่ยน policy ต้องมี owner, ขอบเขตแคบ, วันทบทวน และ rollback plan
+
+## Interactive tools
+
+เปิด [`landing-page/index.html`](./landing-page/index.html) เพื่อใช้เครื่องมือแบบ zero-build:
+
+- RFC 2047 Thai header encoder
+- SMTP/Deliverability checklist และ response-code lookup
+- Zero-Credential template preview
+- M365 troubleshooting และ PowerShell command generator (ตรวจสอบและอนุมัติก่อนนำไปใช้จริง)
+
+## ไฟล์สำคัญและเอกสารอ้างอิง
+
+- [`SKILL.md`](./SKILL.md) — runbook หลักสำหรับ AI และผู้ปฏิบัติงาน
+- [`email-delivery-incident-root-cause-analysis.md`](./email-delivery-incident-root-cause-analysis.md) — RCA, Header Hygiene, Zero-Credential Exposure และหลักฐานการแก้ไข
+- [`examples/smtp-send-example.js`](./examples/smtp-send-example.js) — Native TLS SMTP reference implementation
+- [`references/gmail-smtp-config.md`](./references/gmail-smtp-config.md) — ports, TLS, limits และ SMTP response codes
+- [`references/m365-group-delivery.md`](./references/m365-group-delivery.md) — EOP/Defender และ group delivery
+- [`references/anti-spam-deliverability.md`](./references/anti-spam-deliverability.md) — SPF/DKIM/DMARC, MIME และ content hygiene
+
+## โครงสร้างโปรเจกต์
+
+```text
+SKILL.md                         # reusable troubleshooting runbook
+README.md                        # project guide
+index.html                       # root entry, forwards to Landing Page
+landing-page/                    # all Landing Page files
+  index.html / app.js / styles.css
+  components/ / assets/
+examples/                        # reference sender
+references/                      # detailed protocol and provider guides
+```
+
+## License
+
 MIT © 2026 Internal Skill Configuration & Runbook

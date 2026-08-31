@@ -1,10 +1,10 @@
 /* ==========================================================================
    Gmail SMTP & Deliverability Skill Landing Page - UI/UX Pro Max Design System
    Color Scheme: Dark Slate Tech (#0B0F19, #111827, #1E293B, #3B82F6, #10B981)
-   Typography: IBM Plex Sans, Outfit, JetBrains Mono
+   Typography: Outfit, JetBrains Mono
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
   /* Color Tokens */
@@ -33,10 +33,9 @@
   --accent-amber-glow: rgba(245, 158, 11, 0.2);
   
   --accent-rose: #EF4444;
-  --accent-purple: #8B5CF6;
   
   /* Typography */
-  --font-sans: 'Outfit', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: 'Outfit', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   
   /* Transitions */
@@ -312,7 +311,7 @@ body {
 }
 
 .hero-title .gradient-text {
-  background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 50%, #8B5CF6 100%);
+  background: linear-gradient(135deg, #bfdbfe 0%, #3B82F6 50%, #0f766e 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -651,7 +650,7 @@ body {
 .icon-blue { background: rgba(59, 130, 246, 0.15); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.3); }
 .icon-emerald { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); }
 .icon-amber { background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.3); }
-.icon-purple { background: rgba(139, 92, 246, 0.15); color: #A78BFA; border: 1px solid rgba(139, 92, 246, 0.3); }
+.icon-teal { background: rgba(20, 184, 166, 0.15); color: #5eead4; border: 1px solid rgba(20, 184, 166, 0.3); }
 
 .card-title {
   font-size: 1.25rem;
@@ -1036,7 +1035,7 @@ body {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   border: 1px solid #E2E8F0;
-  font-family: 'Sarabun', 'Noto Sans Thai', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  font-family: var(--font-sans), Arial, sans-serif;
 }
 
 .email-mockup-header {
@@ -1276,6 +1275,192 @@ body {
   100% { background-position: -200% 0; }
 }
 
+/* ==========================================================================
+   Landing page polish: resilient navigation, focus states, and responsive rhythm
+   ========================================================================== */
+::selection {
+  color: #eff6ff;
+  background: rgba(37, 99, 235, 0.72);
+}
+
+:focus-visible {
+  outline: 3px solid rgba(96, 165, 250, 0.9);
+  outline-offset: 4px;
+}
+
+.hero {
+  min-height: min(760px, 100dvh);
+  display: flex;
+  align-items: center;
+  padding-top: 64px;
+  padding-bottom: 88px;
+}
+
+.hero-title .gradient-text {
+  background: linear-gradient(120deg, #bfdbfe 0%, #60a5fa 52%, #2563eb 100%);
+}
+
+.hero-subtitle,
+.section-desc {
+  text-wrap: pretty;
+}
+
+.nav-link {
+  min-height: 40px;
+  white-space: nowrap;
+}
+
+.btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.tool-box,
+.stat-card,
+.bento-card,
+.troubleshoot-card {
+  box-shadow: 0 18px 48px rgba(2, 6, 23, 0.24);
+}
+
+@media (max-width: 1080px) {
+  .nav-wrapper {
+    flex-wrap: wrap;
+    gap: 8px 18px;
+  }
+
+  .nav-links {
+    order: 3;
+    flex: 1 0 100%;
+    justify-content: flex-start;
+    gap: 8px 18px;
+    overflow-x: auto;
+    padding: 6px 2px 2px;
+    scrollbar-width: thin;
+  }
+}
+
+@media (max-width: 680px) {
+  .navbar {
+    top: 8px;
+    margin: 8px 12px 0;
+  }
+
+  .nav-wrapper {
+    padding: 10px 14px;
+    border-radius: var(--radius-lg);
+  }
+
+  .brand-name {
+    font-size: 0.96rem;
+  }
+
+  .brand-badge {
+    display: none;
+  }
+
+  .nav-actions {
+    margin-left: auto;
+  }
+
+  .nav-actions .btn {
+    padding: 8px 11px;
+  }
+
+  .hero {
+    min-height: auto;
+    padding: 56px 0 64px;
+  }
+
+  .hero-title {
+    font-size: clamp(2rem, 12vw, 3rem);
+    line-height: 1.08;
+  }
+
+  .hero-title br {
+    display: none;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+
+  .hero-cta-group {
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+
+  .hero-cta-group .btn {
+    width: 100%;
+  }
+
+  .hero-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 15px 10px;
+  }
+
+  .stat-number {
+    font-size: 1.1rem;
+  }
+
+  .stat-label {
+    font-size: 0.74rem;
+    line-height: 1.35;
+  }
+
+  .section {
+    padding: 52px 0;
+  }
+
+.container {
+    padding: 0 16px;
+  }
+
+  .tool-box {
+    padding: 20px 16px;
+    border-radius: var(--radius-lg);
+  }
+}
+
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 200;
+  transform: translateY(-160%);
+  background: #eff6ff;
+  color: #0f172a;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform var(--transition-fast);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .reveal-on-scroll {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* 4. MagnetButton (React Bits Elastic Physics) */
 .btn-magnet {
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
@@ -1310,4 +1495,11 @@ body {
   transform: translateY(0);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on-scroll,
+  .reveal-on-scroll.reveal-visible {
+    opacity: 1;
+    transform: none;
+  }
+}
 

@@ -262,16 +262,16 @@ function initM365Generator() {
     } else if (mode === 'bypass') {
       commands = [
         `# ==========================================================================`,
-        `# Mail Flow Rule (Bypass Spam / Set SCL -1 for Trusted Notification App)`,
+        `# Mail Flow Rule (Admin-reviewed exception; do not enable by default)`,
         `# ==========================================================================`,
         `Connect-ExchangeOnline -UserPrincipalName admin@yourdomain.com`,
         ``,
-        `# 1. Create Transport Rule to Bypass Spam Filtering for Application Sender`,
+        `# 1. Draft a narrowly-scoped transport rule for Exchange Admin review`,
         `New-TransportRule -Name "Bypass Spam for App Notifications" \\`,
         `  -SenderAddressMatchesPatterns "${bypassSender}" \\`,
         `  -SetSCL -1 \\`,
-        `  -State Enabled \\`,
-        `  -Comments "Allow external Gmail SMTP notifications without Defender quarantine"`,
+        `  -State Disabled \\`,
+        `  -Comments "Requires owner approval, expiry date, and security review before enabling"`,
         ``,
         `# 2. Verify Transport Rule`,
         `Get-TransportRule -Identity "Bypass Spam for App Notifications" | Select-Object Name, SetSCL, State`

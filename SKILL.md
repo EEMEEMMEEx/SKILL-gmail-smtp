@@ -1,95 +1,60 @@
 ---
 name: gmail-smtp
 description: >-
-  Comprehensive guide, configuration runbook, and deliverability optimization for Gmail SMTP,
-  Microsoft 365 Enterprise & Corporate Inboxes, Microsoft 365 Groups, and anti-phishing/anti-spam best practices (SPF, DKIM, DMARC, EOP Defender heuristics, and serverless routing).
-  Use when setting up Gmail SMTP, troubleshooting email delivery failures, fixing Microsoft 365/Corporate Inbox rejections,
-  or resolving Spam/Phishing/Quarantine issues.
+  Configure and troubleshoot Gmail SMTP delivery to consumer and Microsoft 365 inboxes.
+  Use for SMTP acceptance, NDRs, M365/Exchange rejections, spam or quarantine incidents,
+  and safe transactional-email delivery; not for sending credentials or bypassing mail security.
 ---
 
-# Gmail SMTP & Enterprise Email Deliverability Skill
+# Gmail SMTP & Enterprise Email Delivery
 
-คู่มือและขั้นตอนปฏิบัติการ (Runbook) สำหรับการใช้งาน Gmail SMTP, การแก้ไขปัญหาการส่งอีเมลเข้า Microsoft 365 Enterprise / โดเมนองค์กร (Corporate Inboxes), Microsoft 365 Groups และสถาปัตยกรรมการส่งอีเมลผ่าน Serverless API โดยไม่ติด Spam หรือโดน Defender กรองเป็น Phishing/Quarantine
+Use this runbook to diagnose transactional-email delivery without weakening recipient security.
+Keep SMTP credentials server-side, redact them from logs and tickets, and never place passwords or other credentials in email content.
 
----
+## Triage: establish where delivery failed
 
-## 1. Quick Start: Gmail SMTP Configuration
+1. Capture the recipient, UTC timestamp, SMTP response, provider message ID, envelope sender, header `From`, and any NDR or full received headers. Redact secrets and personal data.
+2. Test the transport separately: DNS/network reachability, TLS negotiation, and SMTP authentication. For Gmail SMTP, use implicit TLS on port 465 or STARTTLS with TLS required on port 587; use an App Password or another supported authentication method, never an account password.
+3. Treat `250 2.0.0 Accepted for delivery` as **handoff to the relay, not proof of inbox delivery**. Check for a downstream NDR, recipient-side trace, Junk, and admin quarantine before changing the sender.
+4. Classify the failure, apply the smallest corrective action, then send one controlled test to a known-valid mailbox. Preserve the message ID and result as evidence.
 
-### 1.1 Google App Password Setup
-1. เปิด **2-Step Verification** ที่ [Google Security](https://myaccount.google.com/security)
-2. ไปที่ [Google App Passwords](https://myaccount.google.com/apppasswords)
-3. สร้าง App Name เช่น `App-SMTP-Mailer`
-4. คัดลอกรหัสผ่าน 16 ตัวอักษร (ลบช่องว่างออก)
-
-### 1.2 Recommended Connection Parameters
-| พารามิเตอร์ | Port 465 (มาตรฐานสูงสุดสำหรับ Gmail) | Port 587 (Alternative) |
+| Signal | Likely cause | Action |
 |---|---|---|
-| **Host** | `smtp.gmail.com` | `smtp.gmail.com` |
-| **Port** | `465` | `587` |
-| **Security** | Implicit TLS (`secure: true`) | STARTTLS (`secure: false`) |
-| **Auth** | `AUTH PLAIN` / `AUTH LOGIN` | `AUTH PLAIN` / `AUTH LOGIN` |
-| **Sending Limits** | 500 ฉบับ/วัน (บัญชีฟรี) | 2,000 ฉบับ/วัน (Google Workspace) |
+| `550 5.4.1 Recipient address rejected: Access denied` from M365/EOP | Directory-Based Edge Blocking (DBEB): recipient is absent, disabled, or not an accepted address in Microsoft Entra ID | Verify the exact mailbox/alias with the recipient organization. Correct the address or have an admin provision/enable it; do not retry repeatedly. |
+| `550 5.1.1` / hard bounce | Mailbox does not exist | Suppress the address until corrected. |
+| `550 5.7.133` or group sender-not-authenticated error | M365 Group blocks external senders | Ask the Exchange admin to confirm whether external senders are intended and change the group only with approval. |
+| `421`, `451`, or `452` | Temporary throttling or service failure | Queue and retry with bounded exponential backoff; stop at the configured retry limit and alert. |
+| `535`, `EAUTH`, or authentication failure | Wrong/revoked App Password, 2-Step Verification or SMTP auth policy | Validate non-secret configuration and rotate the credential through the approved secret store. |
+| Accepted but missing from Inbox/Junk | Quarantine, content/header reputation, or group subscription | Inspect the recipient tenant’s message trace/quarantine and the received headers before changing content. |
 
----
+## Deliverability and header hygiene
 
-## 2. Enterprise Routing for Microsoft 365 & Corporate Inboxes
+- Align the SMTP-authenticated envelope sender and header `From` with an identity authorized to send for that domain. Verify SPF, DKIM, and DMARC alignment; do not spoof another domain in `From`.
+- Let the mail library generate RFC-compliant `Date`, unique `Message-ID`, MIME boundaries, and encoded non-ASCII display names/subjects. Use `multipart/alternative` with both plain-text and HTML versions.
+- Add only purposeful standard metadata such as `Reply-To` and, when applicable, `Content-Language`. Avoid nonessential custom `X-` headers, `X-Mailer`, priority tags, `Auto-Submitted: auto-generated`, `Precedence: bulk`, and delivery-status requests unless a documented integration requires them. These can trigger enterprise heuristics or alter group handling.
+- Make HTML email conservative: table layout, inline CSS, readable text fallback, no scripts/forms/iframes, and a clear sender identity. Every link must be HTTPS, point to the stated destination, and avoid raw IPs and URL shorteners.
+- Keep sending behavior predictable: validate and deduplicate recipients, suppress hard bounces, throttle batches, warm up new senders, and monitor bounce, complaint, deferral, and quarantine trends.
 
-เมื่อส่งอีเมลจาก Gmail SMTP (`@gmail.com`) ไปยังอีเมลองค์กรหรือ Microsoft 365 (เช่น `@yourdomain.com` หรือ `@company.com`) ต้องปฏิบัติตามหลักความปลอดภัยระดับ Enterprise ดังนี้:
+## Zero-Credential Exposure
 
-### 2.1 กฎเหล็กป้องกัน Defender ตรวจจับเป็น High-Confidence Phishing (SCL 9)
-1. ❌ **ห้ามระบุ Plaintext Password หรือคำล่อแหลมในเนื้อหาอีเมลเด็ดขาด:**
-   - ห้ามใส่รหัสผ่านจริง, รหัสผ่านตั้งต้น (`Initial Access`), หรือคำว่า `รหัสผ่านชั่วคราว` ในเนื้อหาที่ส่งจากอีเมลภายนอก
-   - **Microsoft Defender for Office 365 (EOP)** จะตรวจจับว่าอีเมลจากโดเมนภายนอกที่มีรหัสผ่าน + ลิงก์เข้าสู่ระบบ เป็นการโจมตีประเภท **Credential Harvesting / Phishing Simulation** และจะทำการ **Quarantine (กักกัน)** ทันทีโดยไม่แจ้งผู้รับ
-   - **แนวทางที่ถูกต้อง:** ส่งเป็น **Clean Administrative Notification** แจ้งเพียงข้อมูลบัญชี (ชื่อ, อีเมล, บทบาท, โครงการ) พร้อมปุ่มลิงก์เข้าสู่ระบบ และให้ผู้ใช้ใช้รหัสผ่านตั้งต้นขององค์กรหรือติดต่อผู้ดูแลระบบ
-2. ❌ **ห้ามใส่ Header ผิดมาตรฐานที่กระตุ้น Bot Anomaly:**
-   - ถอด Header เช่น `X-Priority`, `X-Entity-Ref-ID`, `X-Mailer` ออกทั้งหมด
-   - กำหนด Header มาตรฐาน: `Content-Language: th`, `Reply-To: <sender-email>`, `MIME-Version: 1.0`
-3. 📐 **การจัดรูปแบบ HTML & Typography:**
-   - ใช้ฟอนต์ที่เป็นมิตรกับระบบองค์กร เช่น `'Sarabun', 'Noto Sans Thai', 'Helvetica Neue', Arial, sans-serif`
-   - จัด Table ขนาด 600px–620px โทนสีสะอาดตา (เช่น บัตรขาว `#ffffff` บนพื้นหลัง `#f1f5f9` หรือ `#f5f5f5`)
+Transactional email must never contain a password, temporary password, App Password, API key, recovery code, or secret copied from another channel. Do not send reusable authentication tokens. An external sender combined with a password and sign-in link is commonly classified by enterprise filters as credential-harvesting phishing and may be quarantined without appearing in Junk.
 
-### 2.2 สถาปัตยกรรม Serverless Dispatcher & Dynamic SMTP Configuration
-เมื่อเว็บแอปพลิเคชันทำงานแบบ Hybrid (เช่น Frontend บน GitHub Pages / Vercel และ Database บน Supabase):
-1. **Endpoint Auto-Routing:**
-   - Frontend ที่อยู่บน Static Hosting (เช่น GitHub Pages) ต้องกำหนด API Endpoint ชี้ไปยัง Serverless Function URL สัมบูรณ์ (Absolute URL บน Vercel) เพื่อป้องกัน HTTP 404 และไม่ให้ตกไปที่ Fallback ของ Third-party Auth
-2. **Dynamic Database Config Loading:**
-   - API Serverless Dispatcher ต้องเชื่อมต่อไปยัง Database (Supabase `system_settings` / `system_secrets`) เพื่อดึงค่า `smtp_config` และรหัสผ่าน `smtp_password` แบบ Real-time ทำให้การเปลี่ยนค่า SMTP บน Web UI มีผลทันทีโดยไม่ต้อง Redeploy Code
+For invitations, send only the account identity and role plus a link to the official application. Use an approved identity-provider activation, password-reset, or magic-link flow that is short-lived, single-use, and logged. Do not include the token itself in diagnostic logs or support tickets.
 
----
+## Microsoft 365 and group delivery
 
-## 3. การแก้ปัญหาการส่งเข้า Microsoft 365 Group / Distribution Lists
+- Before sending an invitation or critical notification, confirm the recipient address is provisioned and active in Microsoft 365/Google Workspace. M365 validates recipients at the edge; an address-shaped string is not enough.
+- For a M365 Group, distinguish “message reached the group mailbox” from “members received personal inbox copies.” The Exchange admin can review external-sender and subscription settings.
+- Never enable external senders, create mail-flow bypass rules, or lower spam/phishing protection merely to make a test pass. These are recipient-tenant policy changes and require the responsible M365 administrator’s explicit approval, narrow scope, review date, and rollback plan.
 
-1. **เปิดรับผู้ส่งภายนอก (Allow External Senders):**
-   ```powershell
-   Set-UnifiedGroup -Identity "group-name@yourdomain.com" -RequireSenderAuthenticationEnabled $false
-   ```
-2. **ตั้งค่า Auto-Subscribe ให้สมาชิกได้รับอีเมลเข้า Inbox:**
-   ```powershell
-   Set-UnifiedGroup -Identity "group-name@yourdomain.com" -AutoSubscribeNewMembers $true
-   ```
-3. **หลีกเลี่ยง Header ที่ทำให้ M365 ข้ามการส่งต่อ:**
-   - ❌ หลีกเลี่ยง `Auto-Submitted: auto-generated` และ `Precedence: bulk`
+## Secure service operation
 
----
+- Send mail from a backend/serverless dispatcher, never from a browser. Static frontends must call the intended absolute API endpoint; a relative endpoint can fail and fall back to an unrelated auth-email flow.
+- Keep SMTP configuration in approved secret management with least-privilege read access. Never hardcode credentials, return them from APIs, expose them to the client, or print SMTP AUTH transcripts.
+- Rotate a credential after suspected exposure or failed-auth anomalies. Test the new credential with a controlled recipient, then revoke the old one.
 
-## 4. กฎเหล็กป้องกันอีเมลตก Spam / Junk Mail
+## Close the incident
 
-| หมวดหมู่ | ข้อกำหนดสำคัญ |
-|---|---|
-| **Authentication** | Envelope From และ Header From ต้องสอดคล้องกัน เพื่อให้ Gmail sign DKIM ได้ถูกต้อง |
-| **MIME Structure** | ต้องมีโครงสร้าง `multipart/alternative` ที่มีทั้ง `text/plain` และ `text/html` เสมอ |
-| **Headers มาตรฐาน** | มี `Date:` (RFC 5322), `Message-ID:` (Unique per email), `Content-Language: th` |
-| **Thai Encoding** | Subject และ From ที่มีภาษาไทยต้อง encode แบบ RFC 2047 (`=?UTF-8?B?...?=`) |
-| **HTML Hygiene** | ใช้ Table-based layout, Inline CSS เท่านั้น, ไม่มี `<script>`, `<iframe>`, `<form>` |
-| **Link Hygiene** | ลิงก์ต้องเป็น `https://`, ห้ามใช้ URL Shortener (bit.ly, tinyurl), ห้ามใช้ Raw IP |
-| **Throttling & Warmup** | มีการหน่วงเวลาส่งระหว่างฉบับ (500ms - 1000ms) และเริ่มส่งจากปริมาณน้อยในสัปดาห์แรก |
+Record the failure class, sanitized evidence, corrective action, one successful end-to-end test, and any tenant-owner handoff. If a sender-domain, M365-policy, or reputation change is needed, stop after collecting evidence and obtain the owner’s approval rather than bypassing controls.
 
----
-
-## 5. โครงสร้างเอกสารอ้างอิงเชิงลึก (References)
-
-- 📖 [Microsoft 365 & Corporate Inbox Delivery Guide](./references/m365-group-delivery.md) — วิเคราะห์สาเหตุ ปัญหา Defender Phishing Quarantining, NDR, EOP Heuristics และการตั้งค่าสำหรับ Enterprise
-- 📖 [Anti-Spam & Deliverability Master Guide](./references/anti-spam-deliverability.md) — เจาะลึก RFC Standards, SPF/DKIM/DMARC, Content Scoring, Anti-Phishing Rules และ Google/Yahoo Sender Requirements
-- 📖 [Gmail SMTP Technical Details](./references/gmail-smtp-config.md) — รายละเอียด Protocol, Port 465 vs 587, Error codes และ Sending Limits
-- 💻 [Reference Implementation Script](./examples/smtp-send-example.js) — ตัวอย่างโค้ดส่งอีเมลแบบมาตรฐานสูงด้วย Node.js
-
+Read `references/gmail-smtp-config.md` for connection details and SMTP codes; `references/m365-group-delivery.md` for Exchange group administration; and `references/anti-spam-deliverability.md` for sender-authentication and template details.
