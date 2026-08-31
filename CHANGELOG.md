@@ -1,5 +1,10 @@
 # Changelog
 
+## [2026-09-01 01:05]
+- **Files Modified:** `README.md`, `landing-page/index.html`, `CHANGELOG.md`
+- **Changes:** เพิ่มคู่มือและคำสั่งติดตั้งผ่าน `npx` (`npx -y degit EEMEEMMEEx/SKILL-gmail-smtp ...`) ใน `README.md` อย่างละเอียด ทั้งระดับ Workspace และ Global (Windows/macOS/Linux) พร้อมอัปเดตลิงก์ Repository บน GitHub ทั้งหมดให้ถูกต้องตรงกัน
+- **Reason:** เพิ่มความสะดวกให้นักพัฒนาและ AI Agent สามารถติดตั้งและนำ Skill ไปใช้งานได้ทันทีด้วยคำสั่งบรรทัดเดียว
+
 ## [2026-09-01 01:01]
 - **Files Modified:** `landing-page/index.html`, `landing-page/app.js`, `README.md`, `CHANGELOG.md`
 - **Changes:** ลบและเปลี่ยนค่าอีเมล/ชื่อผู้รับส่วนบุคคลทั้งหมดในหน้า Landing Page และ README.md ให้เป็นค่าตัวอย่างมาตรฐานสากล (`recipient@yourcompany.com`, `somchai@yourcompany.com`, `สมชาย ใจดี`, `https://app.yourdomain.com`)

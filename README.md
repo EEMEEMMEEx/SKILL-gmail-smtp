@@ -24,24 +24,41 @@
 
 ชุดเครื่องมือนี้สามารถติดตั้งและนำไปใช้งานได้ 3 รูปแบบตามบริบทของระบบ:
 
-### 1. ติดตั้งเป็น AI Agent Skill (Antigravity Customization)
+### 1. ติดตั้งเป็น AI Agent Skill (Antigravity / Gemini Customization)
 
-- **ติดตั้งระดับ Workspace (เฉพาะโปรเจกต์):**
-  คัดลอกโฟลเดอร์หรือไฟล์รันบุ๊กไปไว้ที่ Workspace Customization Root:
+#### ก. ติดตั้งด่วนด้วย `npx` (Non-interactive One-Liner ผ่าน `degit` แนะนำสูงสุด)
+
+- **ติดตั้งระดับ Workspace (เฉพาะโปรเจกต์เป้าหมาย):**
   ```bash
-  # โครงสร้างปลายทาง: <workspace-root>/.agents/skills/gmail-smtp/
+  # รันคำสั่งนี้ที่ Root ของโปรเจกต์
+  npx -y degit EEMEEMMEEx/SKILL-gmail-smtp .agents/skills/gmail-smtp
+  ```
+
+  *(กรณีมีโฟลเดอร์เดิมอยู่แล้วและต้องการเขียนทับ: `npx -y degit EEMEEMMEEx/SKILL-gmail-smtp .agents/skills/gmail-smtp --force`)*
+
+- **ติดตั้งระดับ Global (ใช้งานได้ทุกโปรเจกต์บนเครื่อง):**
+  - **Windows (PowerShell):**
+    ```powershell
+    npx -y degit EEMEEMMEEx/SKILL-gmail-smtp "$env:USERPROFILE\.gemini\config\skills\gmail-smtp"
+    ```
+  - **macOS / Linux (Bash/Zsh):**
+    ```bash
+    npx -y degit EEMEEMMEEx/SKILL-gmail-smtp ~/.gemini/config/skills/gmail-smtp
+    ```
+
+#### ข. ติดตั้งแบบ Manual / คัดลอกไฟล์
+
+- **ระดับ Workspace:**
+  ```bash
   mkdir -p .agents/skills/gmail-smtp
   cp SKILL.md .agents/skills/gmail-smtp/
   cp -r references .agents/skills/gmail-smtp/
   ```
-- **ติดตั้งระดับ Global (ใช้งานได้ทุกโปรเจกต์บนเครื่อง):**
-  คัดลอกไปยัง Global Customizations Directory:
-  ```bash
-  # Windows Path: %USERPROFILE%\.gemini\config\skills\gmail-smtp\
-  # หรือคัดลอกทั้งโฟลเดอร์ไปวางไว้ในโฟลเดอร์ skills ของระบบ
-  ```
+- **ระดับ Global:**
+  คัดลอกไฟล์ `SKILL.md` และโฟลเดอร์ `references/` ไปไว้ที่ `%USERPROFILE%\.gemini\config\skills\gmail-smtp\` (Windows) หรือ `~/.gemini/config/skills/gmail-smtp/` (macOS/Linux)
+
 - **การเรียกใช้งานโดย AI:**
-  AI Agent จะค้นหาและเรียกใช้ Skill นี้โดยอัตโนมัติเมื่อมีการสอบถามหรือสืบสวนปัญหาเกี่ยวกับ Gmail SMTP, Nodemailer, Microsoft 365 / Outlook NDRs, หรือ Deliverability Drop
+  AI Agent จะตรวจพบ Skill นี้โดยอัตโนมัติ (Progressive Disclosure) เมื่อมีการสอบถามหรือสืบสวนปัญหาเกี่ยวกับ Gmail SMTP, Nodemailer, Microsoft 365 / Outlook NDRs, หรือ Deliverability Drop หรือผู้ใช้สามารถสั่งเจาะจงด้วย `@gmail-smtp`
 
 ---
 
@@ -85,7 +102,7 @@
 
 - **Clone Repository ลงเครื่อง:**
   ```bash
-  git clone https://github.com/bearnannan/SKILL-gmail-smtp.git
+  git clone https://github.com/EEMEEMMEEx/SKILL-gmail-smtp.git
   cd SKILL-gmail-smtp
   ```
 - **เปิดใช้งานได้ทันที (Zero-Build):**
