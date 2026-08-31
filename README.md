@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/EEMEEMMEEx/SKILL-gmail-smtp/main/landing-page/assets/icon.svg" alt="Gmail SMTP Logo" width="72" height="72" onerror="this.style.display='none'"/>
+  <img src="./landing-page/assets/icon.svg" alt="Gmail SMTP Logo" width="80" height="80"/>
 </p>
 
 <h1 align="center">Gmail SMTP & Enterprise Email Deliverability Suite</h1>
