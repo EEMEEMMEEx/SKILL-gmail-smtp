@@ -1,5 +1,15 @@
 # Changelog
 
+## [2026-09-01 01:07]
+- **Files Modified:** `README.md`, `CHANGELOG.md`
+- **Changes:** ออกแบบและปรับปรุง `README.md` ใหม่ทั้งหมดในรูปแบบ Visual Showcase สำหรับ GitHub:
+  1. เพิ่ม Header Badges สไตล์ Shields.io (Gmail SMTP, M365 Verified, SCL 0-1, Zero-Credential, MIT License) พร้อมปุ่ม CTA สู่ Live Interactive Demo
+  2. เพิ่มตารางสรุป Key Highlights & Feature Matrix
+  3. ปรับแผนผังสถาปัตยกรรมระบบเป็น ASCII Flow Pipeline Box ที่มี Contrast ชัดเจนและอ่านง่าย
+  4. เพิ่ม GitHub Alert Callouts (`> [!IMPORTANT]`, `> [!TIP]`)
+  5. ปรับหมวด Troubleshooting, Code Snippets (Node.js, Serverless, Python) ให้อยู่ใน Collapsible Accordion (`<details><summary>`) เพื่อความกระชับและน่าอ่าน
+- **Reason:** ยกระดับหน้าแรกของ GitHub Repository ให้มีความสวยงาม โดดเด่น เป็นมืออาชีพ และดึงดูดผู้ใช้งาน
+
 ## [2026-09-01 01:05]
 - **Files Modified:** `README.md`, `landing-page/index.html`, `CHANGELOG.md`
 - **Changes:** เพิ่มคู่มือและคำสั่งติดตั้งผ่าน `npx` (`npx -y degit EEMEEMMEEx/SKILL-gmail-smtp ...`) ใน `README.md` อย่างละเอียด ทั้งระดับ Workspace และ Global (Windows/macOS/Linux) พร้อมอัปเดตลิงก์ Repository บน GitHub ทั้งหมดให้ถูกต้องตรงกัน
