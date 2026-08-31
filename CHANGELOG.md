@@ -2,7 +2,7 @@
 
 ## [2026-09-01 01:01]
 - **Files Modified:** `landing-page/index.html`, `landing-page/app.js`, `README.md`, `CHANGELOG.md`
-- **Changes:** ลบและเปลี่ยนค่าอีเมล/ชื่อผู้รับส่วนบุคคลทั้งหมด (`watchara.m@forth.co.th`, `วัชระ มานะดี`, `https://stockflow.forth.co.th`) ในหน้า Landing Page และ README.md ให้เป็นค่ามาตรฐานสากล (`recipient@yourcompany.com`, `somchai@yourcompany.com`, `สมชาย ใจดี`, `https://app.yourdomain.com`)
+- **Changes:** ลบและเปลี่ยนค่าอีเมล/ชื่อผู้รับส่วนบุคคลทั้งหมดในหน้า Landing Page และ README.md ให้เป็นค่าตัวอย่างมาตรฐานสากล (`recipient@yourcompany.com`, `somchai@yourcompany.com`, `สมชาย ใจดี`, `https://app.yourdomain.com`)
 - **Reason:** รักษาความเป็นส่วนตัวและความปลอดภัยของข้อมูลตัวอย่าง (Data Privacy & Anonymization)
 
 ## [2026-09-01 00:50]
